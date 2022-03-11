@@ -4,7 +4,7 @@
 
 ### Motor Controls:
 1. The robot must be able to move in all FOUR directions, Forward, Left, Right and Back.
-    - [ ] Move Forward 
+    - [x] Move Forward 
     - [ ] Turn Left (Stationary Turns)
     - [ ] Turn Right (Stationary Turns)
     - [ ] Reverse (?)
