@@ -2,6 +2,13 @@
 
 ## Project Specifications:
 
+- Set up main.c:
+    - [ ] InitPWMMotors
+    - [ ] InitPWMBuzzer
+    - [ ] InitUART
+    - [ ] InitLED (on/off states)
+    - [ ] Set up Remote/Self-Driving state
+
 ### Motor Controls:
 1. The robot must be able to move in all FOUR directions, Forward, Left, Right and Back.
     - [x] Move Forward 
