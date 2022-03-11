@@ -2,7 +2,7 @@
 
 ## Project Specifications:
 
-- Set up main.c:
+### Set up main.c:
     - [ ] InitPWMMotors
     - [ ] InitPWMBuzzer
     - [ ] InitUART
