@@ -1,21 +1,7 @@
 #include "MKL25Z4.h"                    // Device header
+#include "motorControls.h"
 
-#define UPPER_LEFT_MOTOR 0		//PORTB PIN 0
-#define UPPER_RIGHT_MOTOR 2		//PORTB PIN 1
-#define BOTTOM_LEFT_MOTOR 1	  //PORTB PIN 2
-#define BOTTOM_RIGHT_MOTOR 3  //PORTB PIN 3
-
-#define UPPER_LEFT_WHEEL TPM2_C1V
-#define UPPER_RIGHT_WHEEL TPM1_C1V
-#define BOTTOM_LEFT_WHEEL TPM2_C0V
-#define BOTTOM_RIGHT_WHEEL TPM1_C0V
-
-#define FULL_SPEED 7501
-#define HALF_SPEED 3500
-
-#define MASK(x) (1UL << x)
-
-void init_PWM() {
+void InitPWMMotor() {
 	//Enable clock source for timer 1 and 2
 	SIM_SCGC6 |= SIM_SCGC6_TPM1_MASK | SIM_SCGC6_TPM2_MASK;
 	//Select clock source for TPM1 and TPM2
@@ -43,7 +29,7 @@ void init_PWM() {
 	TPM2_C1SC |= TPM_CnSC_ELSB(1) | TPM_CnSC_MSB(1);
 }
 
-void init_GPIO_with_PWM(){
+void InitGPIOMotor(){
 	//Enable clock source for PORTB GPIO
 	SIM_SCGC5 |= SIM_SCGC5_PORTB_MASK;
 	//Configure PORTB PCR to TPM mode
@@ -55,9 +41,9 @@ void init_GPIO_with_PWM(){
 	PORTB->PCR[BOTTOM_LEFT_MOTOR] |= PORT_PCR_MUX(3);	//TPM2
 	PORTB->PCR[BOTTOM_RIGHT_MOTOR] &= ~PORT_PCR_MUX_MASK;
 	PORTB->PCR[BOTTOM_RIGHT_MOTOR] |= PORT_PCR_MUX(3); //TPM2
-	init_PWM();
 }
 
+//TODO: fix up the speed values, set up motor control
 void go_forward(int speed){
 	UPPER_LEFT_WHEEL = speed;
 	UPPER_RIGHT_WHEEL = speed;
@@ -100,23 +86,26 @@ static void delay(volatile uint32_t nof) {
   }
 }
 
+/*
 int main(void) {
 	SystemCoreClockUpdate();
-	init_GPIO_with_PWM();
+	initPWM();
+	initGPIO();
 	while (1) {
-		/*go_forward(3750);
+		go_forward(3750);
 		delay(0x88000);
 		
 		go_backward(3750);
 		delay(0x88000);
 		
 		turn_left(3750);
-		delay(0x88000);*/
+		delay(0x88000);
 		
 		turn_right(3750);
 		delay(0x88000);
 		
-		/*stop_moving();
-		delay(0x88000);*/
+		stop_moving();
+		delay(0x88000);
 	}
 }
+*/
