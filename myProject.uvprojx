@@ -383,9 +383,39 @@
           <GroupName>Source Group 1</GroupName>
           <Files>
             <File>
-              <FileName>myPWM.c</FileName>
+              <FileName>motorControls.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\myPWM.c</FilePath>
+              <FilePath>.\motorControls.c</FilePath>
+            </File>
+            <File>
+              <FileName>motorControls.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\motorControls.h</FilePath>
+            </File>
+            <File>
+              <FileName>main.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\main.c</FilePath>
+            </File>
+            <File>
+              <FileName>ledControls.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\ledControls.h</FilePath>
+            </File>
+            <File>
+              <FileName>buzzerControls.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\buzzerControls.h</FilePath>
+            </File>
+            <File>
+              <FileName>uart.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\uart.h</FilePath>
+            </File>
+            <File>
+              <FileName>uart.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\uart.c</FilePath>
             </File>
           </Files>
         </Group>
