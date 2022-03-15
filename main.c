@@ -8,9 +8,8 @@
 //TODO: See if UART is able to receive commands from esp32 board with led strips bah
 int main() {
 	SystemCoreClockUpdate();
-	
-	InitPWMMotors();
 	InitUART2(BAUD_RATE);
+	InitPWMMotors();
 	//InitPWMBuzzer();
 	
 	//InitGPIOBuzzer();
