@@ -1,7 +1,8 @@
 #include "MKL25Z4.h"                    // Device header
 #include "motorControls.h"
 
-void InitPWMMotor() {
+
+void InitPWMMotors(){
 	//Enable clock source for timer 1 and 2
 	SIM_SCGC6 |= SIM_SCGC6_TPM1_MASK | SIM_SCGC6_TPM2_MASK;
 	//Select clock source for TPM1 and TPM2

@@ -17,11 +17,11 @@ Library Manager: ArmAr.exe V5.06 update 6 (build 750)
 Hex Converter:   FromElf.exe V5.06 update 6 (build 750)
 CPU DLL:         SARMCM3.DLL V5.29.0.0
 Dialog DLL:      DARMCM1.DLL V1.19.2.0
-Target DLL:      CMSIS_AGDI.dll V1.32.0.0
+Target DLL:      UL2CM3.DLL V1.163.0.0
 Dialog DLL:      TARMCM1.DLL V1.14.1.0
  
 <h2>Project:</h2>
-C:\Users\diego\OneDrive\NUS Mods\SEM4\CG2271\Project\myPWM.uvprojx
+C:\Users\diego\OneDrive\NUS Mods\SEM4\CG2271\Project\myProject.uvprojx
 Project File Date:  03/15/2022
 
 <h2>Output:</h2>
@@ -29,16 +29,6 @@ Project File Date:  03/15/2022
 Build target 'Target 1'
 compiling RTX_Config.c...
 compiling rtx_lib.c...
-compiling buzzerControls.c...
-buzzerControls.h(9): warning:  #1295-D: Deprecated declaration initPWMBuzzer - give arg types
-  void initPWMBuzzer();
-buzzerControls.h(14): warning:  #1295-D: Deprecated declaration InitGPIOBuzzer - give arg types
-  void InitGPIOBuzzer();
-buzzerControls.h(15): warning:  #1295-D: Deprecated declaration playSong - give arg types
-  void playSong();
-buzzerControls.h(17): warning:  #1-D: last line of file ends without a newline
-  #endif
-buzzerControls.c: 4 warnings, 0 errors
 compiling ledControls.c...
 ledControls.h(9): warning:  #1295-D: Deprecated declaration initGPIOLed - give arg types
   void initGPIOLed();
@@ -51,24 +41,16 @@ ledControls.h(12): warning:  #1295-D: Deprecated declaration ledControl - give a
 ledControls.h(14): warning:  #1-D: last line of file ends without a newline
   #endif
 ledControls.c: 5 warnings, 0 errors
-compiling motorControls.c...
-motorControls.h(25): warning:  #1295-D: Deprecated declaration InitPWMMotors - give arg types
-  void InitPWMMotors();
-motorControls.h(30): warning:  #1295-D: Deprecated declaration InitGPIOMotors - give arg types
-  void InitGPIOMotors();
-motorControls.h(37): warning:  #1295-D: Deprecated declaration stop - give arg types
-  void stop();
-motorControls.h(51): warning:  #1-D: last line of file ends without a newline
+compiling buzzerControls.c...
+buzzerControls.h(9): warning:  #1295-D: Deprecated declaration initPWMBuzzer - give arg types
+  void initPWMBuzzer();
+buzzerControls.h(14): warning:  #1295-D: Deprecated declaration InitGPIOBuzzer - give arg types
+  void InitGPIOBuzzer();
+buzzerControls.h(15): warning:  #1295-D: Deprecated declaration playSong - give arg types
+  void playSong();
+buzzerControls.h(17): warning:  #1-D: last line of file ends without a newline
   #endif
-motorControls.c(93): warning:  #177-D: function "delay"  was declared but never referenced
-  static void delay(volatile uint32_t nof) {
-motorControls.c: 5 warnings, 0 errors
-compiling uart.c...
-uart.h(15): warning:  #1295-D: Deprecated declaration UART2_IRQHandler - give arg types
-  void UART2_IRQHandler();
-uart.h(18): warning:  #1-D: last line of file ends without a newline
-  #endif
-uart.c: 2 warnings, 0 errors
+buzzerControls.c: 4 warnings, 0 errors
 compiling main.c...
 buzzerControls.h(9): warning:  #1295-D: Deprecated declaration initPWMBuzzer - give arg types
   void initPWMBuzzer();
@@ -98,13 +80,31 @@ main.c(37): warning:  #1-D: last line of file ends without a newline
   }
 main.c: 13 warnings, 0 errors
 assembling startup_MKL25Z4.s...
+compiling motorControls.c...
+motorControls.h(25): warning:  #1295-D: Deprecated declaration InitPWMMotors - give arg types
+  void InitPWMMotors();
+motorControls.h(30): warning:  #1295-D: Deprecated declaration InitGPIOMotors - give arg types
+  void InitGPIOMotors();
+motorControls.h(37): warning:  #1295-D: Deprecated declaration stop - give arg types
+  void stop();
+motorControls.h(51): warning:  #1-D: last line of file ends without a newline
+  #endif
+motorControls.c(93): warning:  #177-D: function "delay"  was declared but never referenced
+  static void delay(volatile uint32_t nof) {
+motorControls.c: 5 warnings, 0 errors
+compiling uart.c...
+uart.h(15): warning:  #1295-D: Deprecated declaration UART2_IRQHandler - give arg types
+  void UART2_IRQHandler();
+uart.h(18): warning:  #1-D: last line of file ends without a newline
+  #endif
+uart.c: 2 warnings, 0 errors
 compiling system_MKL25Z4.c...
 linking...
-.\Objects\PWMTest.axf: Error: L6218E: Undefined symbol InitGPIOMotors (referred from main.o).
+.\Objects\myProject.axf: Error: L6218E: Undefined symbol InitGPIOMotors (referred from main.o).
 Not enough information to list image symbols.
 Not enough information to list load addresses in the image map.
 Finished: 2 information, 0 warning and 1 error messages.
-".\Objects\PWMTest.axf" - 1 Error(s), 29 Warning(s).
+".\Objects\myProject.axf" - 1 Error(s), 29 Warning(s).
 
 <h2>Software Packages used:</h2>
 
