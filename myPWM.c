@@ -5,10 +5,13 @@
 #define BOTTOM_LEFT_MOTOR 1	  //PORTB PIN 2
 #define BOTTOM_RIGHT_MOTOR 3  //PORTB PIN 3
 
-#define BOTTOM_RIGHT_WHEEL TPM1_C0V
-#define BOTTOM_LEFT_WHEEL TPM2_C0V
-#define UPPER_RIGHT_WHEEL TPM1_C1V
 #define UPPER_LEFT_WHEEL TPM2_C1V
+#define UPPER_RIGHT_WHEEL TPM1_C1V
+#define BOTTOM_LEFT_WHEEL TPM2_C0V
+#define BOTTOM_RIGHT_WHEEL TPM1_C0V
+
+#define FULL_SPEED 7501
+#define HALF_SPEED 3500
 
 #define MASK(x) (1UL << x)
 
@@ -106,10 +109,13 @@ int main(void) {
 		
 		go_backward(3750);
 		delay(0x88000);
+		
 		turn_left(3750);
 		delay(0x88000);*/
+		
 		turn_right(3750);
 		delay(0x88000);
+		
 		/*stop_moving();
 		delay(0x88000);*/
 	}
