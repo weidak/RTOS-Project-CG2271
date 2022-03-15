@@ -35,11 +35,17 @@ Movement Controls
 void forwards(uint32_t speed);
 void reverse(uint32_t speed);
 void stop();
-/*
-void left45(uint32_t speed);
+
+void left(uint32_t speed);
+
+//Stationary turn:
 void left90(uint32_t speed);
-void right45(uint32_t speed);
+
+void right(uint32_t speed);
+
+//Stationary turn:
 void right90(uint32_t speed);
-*/
+
+static void delay(volatile uint32_t nof);
 
 #endif

@@ -44,32 +44,42 @@ void InitGPIOMotor(){
 }
 
 //TODO: fix up the speed values, set up motor control
-void go_forward(int speed){
+void fowards(uint32_t speed){
 	UPPER_LEFT_WHEEL = speed;
 	UPPER_RIGHT_WHEEL = speed;
 	BOTTOM_LEFT_WHEEL = speed;
 	BOTTOM_RIGHT_WHEEL = speed;
 }
 
-void go_backward(int speed) {
+//TODO: Put negative potential difference across AIN1 and AIN2
+void reverse(uint32_t speed) {
 	UPPER_LEFT_WHEEL = -speed;
 	UPPER_RIGHT_WHEEL = -speed;
 	BOTTOM_LEFT_WHEEL = -speed;
 	BOTTOM_RIGHT_WHEEL = -speed;
 }
 
-void turn_left(int speed) {
+
+void left(uint32_t speed) {
 	UPPER_LEFT_WHEEL = 0;
 	UPPER_RIGHT_WHEEL = speed;
 	BOTTOM_LEFT_WHEEL = 0;
 	BOTTOM_RIGHT_WHEEL = speed;
 }
 
-void turn_right(int speed) {
+void left90(uint32_t speed) {
+	
+}
+
+void right(uint32_t speed) {
 	UPPER_LEFT_WHEEL = speed;
 	UPPER_RIGHT_WHEEL = 0;
 	BOTTOM_LEFT_WHEEL = speed;
 	BOTTOM_RIGHT_WHEEL = 0;
+}
+
+void right90(uint32_t speed) {
+	
 }
 
 void stop_moving() {
