@@ -23,8 +23,10 @@
 
 ### LED Control:
 1. The front 8-10 Green LED’s must be in a Running Mode (1 LED at a time) whenever the robot is moving (in any direction).
+    - [x] Green LED Running state
     - [ ] Moving state (front)
 2. The front 8-10 Green LED’s must all be lighted up continuously whenever the robot is stationery.
+    - [x] Green LED ON state
     - [ ] Stop state (front)
 3. The rear 8-10 Red LED’s must be flashing continuously at a rate of 500ms ON, 500ms OFF, while the robot is moving (in any direction).
     - [ ] Moving state (rear)
