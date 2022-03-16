@@ -1,3 +1,6 @@
+#include "RTE_Components.h"
+#include  CMSIS_device_header
+#include "cmsis_os2.h"
 #include "MKL25Z4.h"                    // Device header
 #include "buzzerControls.h"
 #include "motorControls.h"
@@ -6,15 +9,33 @@
 
 //TODO: Test motor controls and interrupts? 
 //TODO: See if UART is able to receive commands from esp32 board with led strips bah
+
+void app_control_led(void *argument) {
+	for (;;) {
+		controlLED();
+	}
+}
+
 int main() {
 	SystemCoreClockUpdate();
-	InitUART2(BAUD_RATE);
-	InitPWMMotors();
+	initGPIOLed();
+	osKernelInitialize();
+	osThreadNew(app_control_led, NULL, NULL);
+	osKernelStart();
+	
+	for (;;) { 
+		//onAllLED();
+		//controlLED(); 
+	}
+	
+	
+	//InitUART2(BAUD_RATE);
+	//InitPWMMotors();
 	//InitPWMBuzzer();
 	
 	//InitGPIOBuzzer();
 	//InitGPIOLed();
-	InitGPIOMotors();
+	//InitGPIOMotors();
 	
 	/*
 	while (1) {
@@ -34,4 +55,5 @@ int main() {
 		delay(0x88000);
 	}
 	*/
+	return 0;
 }

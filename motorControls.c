@@ -30,7 +30,7 @@ void InitPWMMotors(){
 	TPM2_C1SC |= TPM_CnSC_ELSB(1) | TPM_CnSC_MSB(1);
 }
 
-void InitGPIOMotor(){
+void InitGPIOMotors(){
 	//Enable clock source for PORTB GPIO
 	SIM_SCGC5 |= SIM_SCGC5_PORTB_MASK;
 	//Configure PORTB PCR to TPM mode
