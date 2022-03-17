@@ -29,99 +29,105 @@ Project File Date:  03/16/2022
 Rebuild target 'Target 1'
 compiling RTX_Config.c...
 compiling rtx_lib.c...
-compiling ledControls.c...
-ledControls.h(9): warning:  #1295-D: Deprecated declaration initGPIOLed - give arg types
-  void initGPIOLed();
-ledControls.h(10): warning:  #1295-D: Deprecated declaration forwardState - give arg types
-  void forwardState();
-ledControls.h(11): warning:  #1295-D: Deprecated declaration reverseState - give arg types
-  void reverseState();
-ledControls.h(13): warning:  #1295-D: Deprecated declaration offLED - give arg types
-  void offLED();
-ledControls.h(16): warning:  #1295-D: Deprecated declaration controlLED - give arg types
-  void controlLED();
-ledControls.h(17): warning:  #1295-D: Deprecated declaration onAllLED - give arg types
-  void onAllLED();
-ledControls.h(19): warning:  #1-D: last line of file ends without a newline
-  #endif
-ledControls.c(10): warning:  #177-D: function "delay"  was declared but never referenced
-  static void delay(volatile uint32_t nof) {
-ledControls.c: 8 warnings, 0 errors
-compiling motorControls.c...
-motorControls.h(25): warning:  #1295-D: Deprecated declaration InitPWMMotors - give arg types
-  void InitPWMMotors();
-motorControls.h(30): warning:  #1295-D: Deprecated declaration InitGPIOMotors - give arg types
-  void InitGPIOMotors();
-motorControls.h(37): warning:  #1295-D: Deprecated declaration stop - give arg types
-  void stop();
-motorControls.h(51): warning:  #1-D: last line of file ends without a newline
-  #endif
-motorControls.c(93): warning:  #177-D: function "delay"  was declared but never referenced
-  static void delay(volatile uint32_t nof) {
-motorControls.c: 5 warnings, 0 errors
-assembling startup_MKL25Z4.s...
 compiling uart.c...
 uart.h(15): warning:  #1295-D: Deprecated declaration UART2_IRQHandler - give arg types
   void UART2_IRQHandler();
 uart.h(18): warning:  #1-D: last line of file ends without a newline
   #endif
 uart.c: 2 warnings, 0 errors
-compiling buzzerControls.c...
-buzzerControls.h(9): warning:  #1295-D: Deprecated declaration initPWMBuzzer - give arg types
-  void initPWMBuzzer();
-buzzerControls.h(14): warning:  #1295-D: Deprecated declaration InitGPIOBuzzer - give arg types
-  void InitGPIOBuzzer();
-buzzerControls.h(15): warning:  #1295-D: Deprecated declaration playSong - give arg types
-  void playSong();
-buzzerControls.h(17): warning:  #1-D: last line of file ends without a newline
-  #endif
-buzzerControls.c: 4 warnings, 0 errors
-compiling main.c...
-buzzerControls.h(9): warning:  #1295-D: Deprecated declaration initPWMBuzzer - give arg types
-  void initPWMBuzzer();
-buzzerControls.h(14): warning:  #1295-D: Deprecated declaration InitGPIOBuzzer - give arg types
-  void InitGPIOBuzzer();
-buzzerControls.h(15): warning:  #1295-D: Deprecated declaration playSong - give arg types
-  void playSong();
-buzzerControls.h(17): warning:  #1-D: last line of file ends without a newline
-  #endif
-motorControls.h(25): warning:  #1295-D: Deprecated declaration InitPWMMotors - give arg types
+compiling motorControls.c...
+motorControls.h(35): warning:  #1295-D: Deprecated declaration InitPWMMotors - give arg types
   void InitPWMMotors();
-motorControls.h(30): warning:  #1295-D: Deprecated declaration InitGPIOMotors - give arg types
+motorControls.h(40): warning:  #1295-D: Deprecated declaration InitGPIOMotors - give arg types
   void InitGPIOMotors();
-motorControls.h(37): warning:  #1295-D: Deprecated declaration stop - give arg types
+motorControls.h(47): warning:  #1295-D: Deprecated declaration stop - give arg types
   void stop();
-motorControls.h(51): warning:  #1-D: last line of file ends without a newline
+motorControls.h(61): warning:  #1-D: last line of file ends without a newline
   #endif
-uart.h(6): warning:  #47-D: incompatible redefinition of macro "MASK"  (declared at line 20 of "motorControls.h")
+motorControls.c(118): warning:  #177-D: function "delay"  was declared but never referenced
+  static void delay(volatile uint32_t nof) {
+motorControls.c: 5 warnings, 0 errors
+compiling buzzerControls.c...
+buzzerControls.h(9): warning:  #1295-D: Deprecated declaration InitPWMBuzzer - give arg types
+  void InitPWMBuzzer();
+buzzerControls.h(14): warning:  #1295-D: Deprecated declaration InitGPIOBuzzer - give arg types
+  void InitGPIOBuzzer();
+buzzerControls.h(15): warning:  #1295-D: Deprecated declaration playSong - give arg types
+  void playSong();
+buzzerControls.h(17): warning:  #1-D: last line of file ends without a newline
+  #endif
+buzzerControls.c(99): warning:  #1-D: last line of file ends without a newline
+  }
+buzzerControls.c: 5 warnings, 0 errors
+compiling ledControls.c...
+ledControls.h(8): warning:  #1295-D: Deprecated declaration initGPIOLed - give arg types
+  void initGPIOLed();
+ledControls.h(11): warning:  #1295-D: Deprecated declaration forwardState - give arg types
+  void forwardState();
+ledControls.h(12): warning:  #1295-D: Deprecated declaration reverseState - give arg types
+  void reverseState();
+ledControls.h(18): warning:  #1295-D: Deprecated declaration runningFrontLED - give arg types
+  void runningFrontLED();
+ledControls.h(19): warning:  #1295-D: Deprecated declaration onAllLED - give arg types
+  void onAllLED();
+ledControls.h(20): warning:  #1295-D: Deprecated declaration rearLed500 - give arg types
+  void rearLed500();
+ledControls.h(21): warning:  #1295-D: Deprecated declaration rearLed250 - give arg types
+  void rearLed250();
+ledControls.h(23): warning:  #1-D: last line of file ends without a newline
+  #endif
+ledControls.c(13): warning:  #177-D: function "delay"  was declared but never referenced
+  static void delay(volatile uint32_t nof) {
+ledControls.c: 9 warnings, 0 errors
+compiling main.c...
+buzzerControls.h(9): warning:  #1295-D: Deprecated declaration InitPWMBuzzer - give arg types
+  void InitPWMBuzzer();
+buzzerControls.h(14): warning:  #1295-D: Deprecated declaration InitGPIOBuzzer - give arg types
+  void InitGPIOBuzzer();
+buzzerControls.h(15): warning:  #1295-D: Deprecated declaration playSong - give arg types
+  void playSong();
+buzzerControls.h(17): warning:  #1-D: last line of file ends without a newline
+  #endif
+motorControls.h(35): warning:  #1295-D: Deprecated declaration InitPWMMotors - give arg types
+  void InitPWMMotors();
+motorControls.h(40): warning:  #1295-D: Deprecated declaration InitGPIOMotors - give arg types
+  void InitGPIOMotors();
+motorControls.h(47): warning:  #1295-D: Deprecated declaration stop - give arg types
+  void stop();
+motorControls.h(61): warning:  #1-D: last line of file ends without a newline
+  #endif
+uart.h(6): warning:  #47-D: incompatible redefinition of macro "MASK"  (declared at line 30 of "motorControls.h")
   #define MASK(x) (1<<(x))
 uart.h(15): warning:  #1295-D: Deprecated declaration UART2_IRQHandler - give arg types
   void UART2_IRQHandler();
 uart.h(18): warning:  #1-D: last line of file ends without a newline
   #endif
-ledControls.h(9): warning:  #1295-D: Deprecated declaration initGPIOLed - give arg types
+ledControls.h(8): warning:  #1295-D: Deprecated declaration initGPIOLed - give arg types
   void initGPIOLed();
-ledControls.h(10): warning:  #1295-D: Deprecated declaration forwardState - give arg types
+ledControls.h(11): warning:  #1295-D: Deprecated declaration forwardState - give arg types
   void forwardState();
-ledControls.h(11): warning:  #1295-D: Deprecated declaration reverseState - give arg types
+ledControls.h(12): warning:  #1295-D: Deprecated declaration reverseState - give arg types
   void reverseState();
-ledControls.h(13): warning:  #1295-D: Deprecated declaration offLED - give arg types
-  void offLED();
-ledControls.h(16): warning:  #1295-D: Deprecated declaration controlLED - give arg types
-  void controlLED();
-ledControls.h(17): warning:  #1295-D: Deprecated declaration onAllLED - give arg types
+ledControls.h(18): warning:  #1295-D: Deprecated declaration runningFrontLED - give arg types
+  void runningFrontLED();
+ledControls.h(19): warning:  #1295-D: Deprecated declaration onAllLED - give arg types
   void onAllLED();
-ledControls.h(19): warning:  #1-D: last line of file ends without a newline
+ledControls.h(20): warning:  #1295-D: Deprecated declaration rearLed500 - give arg types
+  void rearLed500();
+ledControls.h(21): warning:  #1295-D: Deprecated declaration rearLed250 - give arg types
+  void rearLed250();
+ledControls.h(23): warning:  #1-D: last line of file ends without a newline
   #endif
-main.c(58): warning:  #111-D: statement is unreachable
+main.c(89): warning:  #111-D: statement is unreachable
   	return 0;
-main.c(59): warning:  #1-D: last line of file ends without a newline
+main.c(90): warning:  #1-D: last line of file ends without a newline
   }
-main.c: 20 warnings, 0 errors
+main.c: 21 warnings, 0 errors
+assembling startup_MKL25Z4.s...
 compiling system_MKL25Z4.c...
 linking...
-Program Size: Code=7952 RO-data=500 RW-data=5128 ZI-data=360  
-".\Objects\myProject.axf" - 0 Error(s), 39 Warning(s).
+Program Size: Code=8760 RO-data=576 RW-data=5992 ZI-data=360  
+".\Objects\myProject.axf" - 0 Error(s), 42 Warning(s).
 
 <h2>Software Packages used:</h2>
 
@@ -175,7 +181,7 @@ Package Vendor: Keil
       Source file:   Device\Source\ARM\startup_MKL25Z4.s
       Source file:   Device\Source\system_MKL25Z4.c
       Include file:  Device\Source\system_MKL25Z4.h
-Build Time Elapsed:  00:00:03
+Build Time Elapsed:  00:00:01
 </pre>
 </body>
 </html>

@@ -7,35 +7,66 @@
 #include "uart.h"
 #include "ledControls.h"
 
+osMutexId_t myMutex;
+
 //TODO: Test motor controls and interrupts? 
 //TODO: See if UART is able to receive commands from esp32 board with led strips bah
 
-void app_control_led(void *argument) {
+void app_control_front_led(void *argument) {
 	for (;;) {
-		controlLED();
+		//osMutexAcquire(myMutex, osWaitForever);
+		runningFrontLED();
+		//osMutexRelease(myMutex);
 	}
 }
+
+void app_control_rear_led(void *argument) {
+	for(;;) {
+		//osMutexAcquire(myMutex, osWaitForever);
+		rearLed250();
+		//rearLed500();
+		//osMutexRelease(myMutex);
+	}
+}
+
+void app_control_motor(void *argument) {
+	
+	for (;;) {forwards(3500);}
+}
+
+void app_control_buzzer(void *argument) {
+	
+	for (;;) {
+		playSong();
+	}
+}
+
 
 int main() {
 	SystemCoreClockUpdate();
 	initGPIOLed();
+	
+	//InitUART2(BAUD_RATE);
+	InitPWMMotors();
+	InitPWMBuzzer();
+	
+	InitGPIOBuzzer();
+	InitGPIOMotors();
+	
+	
 	osKernelInitialize();
-	osThreadNew(app_control_led, NULL, NULL);
+	//myMutex = osMutexNew(NULL);
+	//osThreadNew(app_control_motor, NULL, NULL);
+	osThreadNew(app_control_buzzer, NULL, NULL);
+	//osThreadNew(app_control_rear_led, NULL, NULL);
+	//osThreadNew(app_control_front_led, NULL, NULL);
+
 	osKernelStart();
 	
 	for (;;) { 
 		//onAllLED();
 		//controlLED(); 
 	}
-	
-	
-	//InitUART2(BAUD_RATE);
-	//InitPWMMotors();
-	//InitPWMBuzzer();
-	
-	//InitGPIOBuzzer();
-	//InitGPIOLed();
-	//InitGPIOMotors();
 	
 	/*
 	while (1) {

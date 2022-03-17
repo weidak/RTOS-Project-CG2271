@@ -34,18 +34,42 @@ void InitGPIOMotors(){
 	//Enable clock source for PORTB GPIO
 	SIM_SCGC5 |= SIM_SCGC5_PORTB_MASK;
 	//Configure PORTB PCR to TPM mode
-	PORTB->PCR[UPPER_LEFT_MOTOR] &= ~PORT_PCR_MUX_MASK;
-	PORTB->PCR[UPPER_LEFT_MOTOR] |= PORT_PCR_MUX(3); //TPM1
-	PORTB->PCR[UPPER_RIGHT_MOTOR] &= ~PORT_PCR_MUX_MASK;
-	PORTB->PCR[UPPER_RIGHT_MOTOR] |= PORT_PCR_MUX(3); //TPM1
-	PORTB->PCR[BOTTOM_LEFT_MOTOR] &= ~PORT_PCR_MUX_MASK;
-	PORTB->PCR[BOTTOM_LEFT_MOTOR] |= PORT_PCR_MUX(3);	//TPM2
-	PORTB->PCR[BOTTOM_RIGHT_MOTOR] &= ~PORT_PCR_MUX_MASK;
-	PORTB->PCR[BOTTOM_RIGHT_MOTOR] |= PORT_PCR_MUX(3); //TPM2
+	
+	//Configure forwards and reverse for upper left motor
+	//F
+	PORTB->PCR[FORW_UPPER_LEFT_MOTOR] &= ~PORT_PCR_MUX_MASK;
+	PORTB->PCR[FORW_UPPER_LEFT_MOTOR] |= PORT_PCR_MUX(3); //TPM1
+	//R
+	PORTB->PCR[REV_UPPER_LEFT_MOTOR] &= ~PORT_PCR_MUX_MASK;
+	PORTB->PCR[REV_UPPER_LEFT_MOTOR] |= PORT_PCR_MUX(3); //TPM1
+	
+	//Configure forwards and reverse for upper right motor
+	//F
+	PORTB->PCR[FORW_UPPER_RIGHT_MOTOR] &= ~PORT_PCR_MUX_MASK;
+	PORTB->PCR[FORW_UPPER_RIGHT_MOTOR] |= PORT_PCR_MUX(3); //TPM1
+	//R
+	PORTB->PCR[REV_UPPER_RIGHT_MOTOR] &= ~PORT_PCR_MUX_MASK;
+	PORTB->PCR[REV_UPPER_RIGHT_MOTOR] |= PORT_PCR_MUX(3); //TPM1
+
+	//Configure forwards and reverse for bottom left motor
+	//F
+	PORTB->PCR[FORW_BOTTOM_LEFT_MOTOR] &= ~PORT_PCR_MUX_MASK;
+	PORTB->PCR[FORW_BOTTOM_LEFT_MOTOR] |= PORT_PCR_MUX(3);	//TPM2
+	//R
+	PORTB->PCR[REV_BOTTOM_LEFT_MOTOR] &= ~PORT_PCR_MUX_MASK;
+	PORTB->PCR[REV_BOTTOM_LEFT_MOTOR] |= PORT_PCR_MUX(3);	//TPM2
+	
+	//Configure forwards and reverse for bottom right motor
+	//F
+	PORTB->PCR[FORW_BOTTOM_RIGHT_MOTOR] &= ~PORT_PCR_MUX_MASK;
+	PORTB->PCR[FORW_BOTTOM_RIGHT_MOTOR] |= PORT_PCR_MUX(3); //TPM2
+	//R
+	PORTB->PCR[REV_BOTTOM_RIGHT_MOTOR] &= ~PORT_PCR_MUX_MASK;
+	PORTB->PCR[REV_BOTTOM_RIGHT_MOTOR] |= PORT_PCR_MUX(3); //TPM2
 }
 
 //TODO: fix up the speed values, set up motor control
-void fowards(uint32_t speed){
+void forwards(uint32_t speed) {
 	UPPER_LEFT_WHEEL = speed;
 	UPPER_RIGHT_WHEEL = speed;
 	BOTTOM_LEFT_WHEEL = speed;
@@ -54,14 +78,15 @@ void fowards(uint32_t speed){
 
 //TODO: Put negative potential difference across AIN1 and AIN2
 void reverse(uint32_t speed) {
-	UPPER_LEFT_WHEEL = -speed;
-	UPPER_RIGHT_WHEEL = -speed;
-	BOTTOM_LEFT_WHEEL = -speed;
-	BOTTOM_RIGHT_WHEEL = -speed;
+	UPPER_LEFT_WHEEL = speed;
+	UPPER_RIGHT_WHEEL = speed;
+	BOTTOM_LEFT_WHEEL = speed;
+	BOTTOM_RIGHT_WHEEL = speed;
 }
 
 
 void left(uint32_t speed) {
+	
 	UPPER_LEFT_WHEEL = 0;
 	UPPER_RIGHT_WHEEL = speed;
 	BOTTOM_LEFT_WHEEL = 0;

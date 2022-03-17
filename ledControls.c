@@ -4,6 +4,9 @@
 
 #define MASK(x) (1 << (x))
 #define LED_NUM 8
+#define REAR_LED 9
+#define REAR_MOVING 500
+#define REAR_STATIONARY 250
 //Port C port numbers used for front led strip:
 uint8_t frontledstrip[] = {7, 0, 3, 4, 5, 6, 10, 11};
 
@@ -28,12 +31,31 @@ void initGPIOLed(){
 	for (int i = 0; i < LED_NUM; i++) {
 		PTC->PDDR |= MASK(frontledstrip[i]);
 	}
+	
+	//init Rear LEDs
+	PORTC->PCR[REAR_LED] &= ~PORT_PCR_MUX_MASK;
+	PORTC->PCR[REAR_LED] |= PORT_PCR_MUX(1);
+	
+	//set port data direction for rear led:
+	PTC->PDDR |= MASK(REAR_LED);
 }
 
-void offLED() {
-	for (int i = 0; i < LED_NUM; i++) {
-		PTC->PDOR &= ~MASK(frontledstrip[i]);
-	}
+void rearLed250() {
+	PTC->PDOR |= MASK(REAR_LED);
+	osDelay(REAR_STATIONARY);
+	PTC->PDOR &= ~MASK(REAR_LED);
+	osDelay(REAR_STATIONARY);
+}
+
+void rearLed500() {
+	PTC->PDOR |= MASK(REAR_LED);
+	osDelay(REAR_MOVING);
+	PTC->PDOR &= ~MASK(REAR_LED);
+	osDelay(REAR_MOVING);
+}
+
+void offLED(uint8_t number) {
+	PTC->PDOR &= ~MASK(number);
 }
 
 void onLED(uint8_t number) {
@@ -42,8 +64,8 @@ void onLED(uint8_t number) {
 
 void onOffLED(uint8_t number){ 
 	onLED(number);
-	osDelay(1000);//delay(0xFFFF);
-	offLED();
+	osDelay(250);//delay(0xFFFF);
+	offLED(number);
 }
 
 void onAllLED(){
@@ -53,7 +75,8 @@ void onAllLED(){
 }
 
 
-void controlLED() {
+void runningFrontLED() {
 	for (int i = 0; i < LED_NUM; i++) onOffLED(frontledstrip[i]);
+	for (int i = LED_NUM; i >= 0; i--) onOffLED(frontledstrip[i]);
 }
 
