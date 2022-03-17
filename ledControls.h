@@ -1,14 +1,23 @@
 #include "MKL25Z4.h"                    // Device header
 
-#ifndef BUZZERCONTROLS_H_
-#define BUZZERCONTROLS_H_
+#ifndef LEDCONTROLS_H_
+#define LEDCONTROLS_H_
 
-/*
-TODO: Initialisation of GPIO and PORTx to control flashing of LEDs
-*/
+
+//Initialisation of GPIO and PORTC to control flashing of LEDs
 void initGPIOLed();
+
+//TODO: States
 void forwardState();
 void reverseState();
-void ledControl();
+
+//Helper Functions
+void offLED(uint8_t number);
+void onLED(uint8_t number);
+void onOffLED(uint8_t number);
+void runningFrontLED();
+void onAllLED();
+void rearLed500();
+void rearLed250();
 
 #endif

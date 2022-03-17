@@ -6,7 +6,7 @@
 /*
 Initialisation of PWM
 */
-void initPWMBuzzer();
+void InitPWMBuzzer();
 
 /*
 TODO: Initialisation of GPIO for PORTD for buzzer and TPM Modes

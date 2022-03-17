@@ -62,6 +62,7 @@ void UART2_IRQHandler() {
 		
 		//if (!isFull(&rx_q)) enqueue(&rx_q, UART2->D);
 		//else while (1); //queue is full, stay in interrupt?
+		
 	}
 	
 	if (UART2->S1 & (UART_S1_OR_MASK 

@@ -1,7 +1,7 @@
 #include "MKL25Z4.h"                    // Device header
 
-#ifndef UART_H_
-#define UART_H_
+#ifndef UART
+#define UART
 
 #define MASK(x) (1<<(x))
 
