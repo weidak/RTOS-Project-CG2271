@@ -1,7 +1,8 @@
 #include "MKL25Z4.h"                    // Device header
 #include "motorControls.h"
+#include <stdarg.h>
 
-void InitPWMMotor() {
+void InitPWMMotors(){
 	//Enable clock source for timer 1 and 2
 	SIM_SCGC6 |= SIM_SCGC6_TPM1_MASK | SIM_SCGC6_TPM2_MASK;
 	//Select clock source for TPM1 and TPM2
@@ -30,63 +31,136 @@ void InitPWMMotor() {
 	TPM2_C1SC |= TPM_CnSC_ELSB(1) | TPM_CnSC_MSB(1);
 }
 
-void InitGPIOMotor(){
+void InitGPIOMotors(){
 	//Enable clock source for PORTB GPIO
 	SIM_SCGC5 |= SIM_SCGC5_PORTB_MASK;
 	//Configure PORTB PCR to TPM mode
-	PORTB->PCR[UPPER_LEFT_MOTOR] &= ~PORT_PCR_MUX_MASK;
-	PORTB->PCR[UPPER_LEFT_MOTOR] |= PORT_PCR_MUX(3); //TPM1
-	PORTB->PCR[UPPER_RIGHT_MOTOR] &= ~PORT_PCR_MUX_MASK;
-	PORTB->PCR[UPPER_RIGHT_MOTOR] |= PORT_PCR_MUX(3); //TPM1
-	PORTB->PCR[BOTTOM_LEFT_MOTOR] &= ~PORT_PCR_MUX_MASK;
-	PORTB->PCR[BOTTOM_LEFT_MOTOR] |= PORT_PCR_MUX(3);	//TPM2
-	PORTB->PCR[BOTTOM_RIGHT_MOTOR] &= ~PORT_PCR_MUX_MASK;
-	PORTB->PCR[BOTTOM_RIGHT_MOTOR] |= PORT_PCR_MUX(3); //TPM2
+	
+	//Configure forwards and reverse for upper left motor
+	//F
+	PORTB->PCR[FORW_UPPER_LEFT_MOTOR] &= ~PORT_PCR_MUX_MASK;
+	PORTB->PCR[FORW_UPPER_LEFT_MOTOR] |= PORT_PCR_MUX(3); //TPM1
+	//R
+	PORTB->PCR[REV_UPPER_LEFT_MOTOR] &= ~PORT_PCR_MUX_MASK;
+	PORTB->PCR[REV_UPPER_LEFT_MOTOR] |= PORT_PCR_MUX(3); //TPM1
+	
+	//Configure forwards and reverse for upper right motor
+	//F
+	PORTB->PCR[FORW_UPPER_RIGHT_MOTOR] &= ~PORT_PCR_MUX_MASK;
+	PORTB->PCR[FORW_UPPER_RIGHT_MOTOR] |= PORT_PCR_MUX(3); //TPM1
+	//R
+	PORTB->PCR[REV_UPPER_RIGHT_MOTOR] &= ~PORT_PCR_MUX_MASK;
+	PORTB->PCR[REV_UPPER_RIGHT_MOTOR] |= PORT_PCR_MUX(3); //TPM1
+
+	//Configure forwards and reverse for bottom left motor
+	//F
+	PORTB->PCR[FORW_BOTTOM_LEFT_MOTOR] &= ~PORT_PCR_MUX_MASK;
+	PORTB->PCR[FORW_BOTTOM_LEFT_MOTOR] |= PORT_PCR_MUX(3);	//TPM2
+	//R
+	PORTB->PCR[REV_BOTTOM_LEFT_MOTOR] &= ~PORT_PCR_MUX_MASK;
+	PORTB->PCR[REV_BOTTOM_LEFT_MOTOR] |= PORT_PCR_MUX(3);	//TPM2
+	
+	//Configure forwards and reverse for bottom right motor
+	//F
+	PORTB->PCR[FORW_BOTTOM_RIGHT_MOTOR] &= ~PORT_PCR_MUX_MASK;
+	PORTB->PCR[FORW_BOTTOM_RIGHT_MOTOR] |= PORT_PCR_MUX(3); //TPM2
+	//R
+	PORTB->PCR[REV_BOTTOM_RIGHT_MOTOR] &= ~PORT_PCR_MUX_MASK;
+	PORTB->PCR[REV_BOTTOM_RIGHT_MOTOR] |= PORT_PCR_MUX(3); //TPM2
 }
 
-//TODO: fix up the speed values, set up motor control
-void fowards(uint32_t speed){
+void enableForwMotorPin(int n,...){
+	va_list pins;
+	va_start(pins, n);
+	for (int i = 0; i < n; i++) {
+		int pin = va_arg(pins, int);
+		PORTB->PCR[pin] |= PORT_PCR_MUX(3);
+	}
+	va_end(pins);
+}
+
+void enableRevMotorPin(int n,...){
+	va_list pins;
+	va_start(pins, n);
+	for (int i = 0; i < n; i++) {
+		int pin = va_arg(pins, int);
+		PORTA->PCR[pin] |= PORT_PCR_MUX(3);
+	}
+	va_end(pins);
+}
+
+void disableAllPins(){
+	PORTB->PCR[FORW_UPPER_LEFT_MOTOR] |= PORT_PCR_MUX(0);
+	PORTB->PCR[REV_UPPER_LEFT_MOTOR] |= PORT_PCR_MUX(0);
+	PORTB->PCR[FORW_UPPER_RIGHT_MOTOR] |= PORT_PCR_MUX(0);
+	PORTB->PCR[REV_UPPER_RIGHT_MOTOR] |= PORT_PCR_MUX(0);
+	PORTB->PCR[FORW_BOTTOM_LEFT_MOTOR] |= PORT_PCR_MUX(0);
+	PORTB->PCR[REV_BOTTOM_LEFT_MOTOR] |= PORT_PCR_MUX(0);
+	PORTB->PCR[FORW_BOTTOM_RIGHT_MOTOR] |= PORT_PCR_MUX(0);
+	PORTB->PCR[REV_BOTTOM_RIGHT_MOTOR] |= PORT_PCR_MUX(0);
+}
+
+void assignDutyCycle(speed){
 	UPPER_LEFT_WHEEL = speed;
 	UPPER_RIGHT_WHEEL = speed;
 	BOTTOM_LEFT_WHEEL = speed;
 	BOTTOM_RIGHT_WHEEL = speed;
+}
+
+//TODO: fix up the speed values, set up motor control
+void forwards(uint32_t speed) {
+	//disable all reverse motors and enable all forward motors
+	disableAllPins();
+	enableForwMotorPin(4, 
+			FORW_UPPER_LEFT_MOTOR, 
+			FORW_BOTTOM_LEFT_MOTOR, 
+			FORW_UPPER_RIGHT_MOTOR, 
+			FORW_BOTTOM_RIGHT_MOTOR);
+	//change the duty cycle according to the speed desired
+	assignDutyCycle(speed);
 }
 
 //TODO: Put negative potential difference across AIN1 and AIN2
 void reverse(uint32_t speed) {
-	UPPER_LEFT_WHEEL = -speed;
-	UPPER_RIGHT_WHEEL = -speed;
-	BOTTOM_LEFT_WHEEL = -speed;
-	BOTTOM_RIGHT_WHEEL = -speed;
+	//disable all forward motors and enable all reverse motors
+	disableAllPins();
+	enableRevMotorPin(4, REV_UPPER_LEFT_MOTOR, REV_BOTTOM_LEFT_MOTOR, REV_UPPER_RIGHT_MOTOR, REV_BOTTOM_RIGHT_MOTOR);
+	//change the duty cycle according to the speed desired 
+	assignDutyCycle(speed);
 }
-
 
 void left(uint32_t speed) {
-	UPPER_LEFT_WHEEL = 0;
-	UPPER_RIGHT_WHEEL = speed;
-	BOTTOM_LEFT_WHEEL = 0;
-	BOTTOM_RIGHT_WHEEL = speed;
+	//disable reverse motors and enable forward motors
+	disableAllPins();
+	enableForwMotorPin(2, FORW_UPPER_RIGHT_MOTOR, FORW_BOTTOM_RIGHT_MOTOR);
+	enableRevMotorPin(2, REV_UPPER_LEFT_MOTOR, REV_BOTTOM_LEFT_MOTOR);
+	assignDutyCycle(speed);
 }
 
-void left90(uint32_t speed) {
-	
+void left90() {
+	disableAllPins();
+	enableForwMotorPin(2, FORW_UPPER_RIGHT_MOTOR, FORW_BOTTOM_RIGHT_MOTOR);
+	enableRevMotorPin(2, REV_UPPER_LEFT_MOTOR, REV_BOTTOM_LEFT_MOTOR);
 }
 
 void right(uint32_t speed) {
-	UPPER_LEFT_WHEEL = speed;
-	UPPER_RIGHT_WHEEL = 0;
-	BOTTOM_LEFT_WHEEL = speed;
-	BOTTOM_RIGHT_WHEEL = 0;
+	disableAllPins();
+	enableForwMotorPin(2, FORW_UPPER_LEFT_MOTOR, FORW_BOTTOM_RIGHT_MOTOR);
+	enableRevMotorPin(2, REV_UPPER_RIGHT_MOTOR, REV_BOTTOM_RIGHT_MOTOR);
+	assignDutyCycle(speed);
 }
 
-void right90(uint32_t speed) {
+void right90() {
+	disableAllPins();
+	enableForwMotorPin(2, FORW_UPPER_LEFT_MOTOR, FORW_BOTTOM_RIGHT_MOTOR);
+	enableRevMotorPin(2, REV_UPPER_RIGHT_MOTOR, REV_BOTTOM_RIGHT_MOTOR);
 	
 }
 
 void stop_moving() {
 	UPPER_LEFT_WHEEL = 0;
-	UPPER_RIGHT_WHEEL = 0;
 	BOTTOM_LEFT_WHEEL = 0;
+	UPPER_RIGHT_WHEEL = 0;
 	BOTTOM_RIGHT_WHEEL = 0;
 }
 
