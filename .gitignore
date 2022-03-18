@@ -1,7 +1,7 @@
 myProject.uvguix.weida
-Listings/*
-Objects/*
-RTE/*
+Listings/
+Objects/
+RTE/
 EventRecorderStub.scvd
 PWMTest.uvguix.User
 PWMTest.uvoptx
