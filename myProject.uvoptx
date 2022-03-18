@@ -150,7 +150,11 @@
       </TargetDriverDllRegistry>
       <Breakpoint/>
       <ScvdPack>
+<<<<<<< HEAD
         <Filename>C:\Users\diego\AppData\Local\Arm\Packs\ARM\CMSIS\5.6.0\CMSIS\RTOS2\RTX\RTX5.scvd</Filename>
+=======
+        <Filename>C:\Users\User\AppData\Local\Arm\Packs\ARM\CMSIS\5.6.0\CMSIS\RTOS2\RTX\RTX5.scvd</Filename>
+>>>>>>> parent of 5cb7eff (Delete myProject.uvoptx)
         <Type>ARM.CMSIS.5.6.0</Type>
         <SubType>1</SubType>
       </ScvdPack>
@@ -160,7 +164,11 @@
       <DebugFlag>
         <trace>0</trace>
         <periodic>1</periodic>
+<<<<<<< HEAD
         <aLwin>0</aLwin>
+=======
+        <aLwin>1</aLwin>
+>>>>>>> parent of 5cb7eff (Delete myProject.uvoptx)
         <aCover>0</aCover>
         <aSer1>0</aSer1>
         <aSer2>0</aSer2>
