@@ -27,26 +27,14 @@ Project File Date:  03/16/2022
 <h2>Output:</h2>
 *** Using Compiler 'V5.06 update 6 (build 750)', folder: 'C:\Keil_v5\ARM\ARMCC\Bin'
 Rebuild target 'Target 1'
-compiling RTX_Config.c...
 compiling rtx_lib.c...
+compiling RTX_Config.c...
 compiling uart.c...
 uart.h(15): warning:  #1295-D: Deprecated declaration UART2_IRQHandler - give arg types
   void UART2_IRQHandler();
 uart.h(18): warning:  #1-D: last line of file ends without a newline
   #endif
 uart.c: 2 warnings, 0 errors
-compiling motorControls.c...
-motorControls.h(35): warning:  #1295-D: Deprecated declaration InitPWMMotors - give arg types
-  void InitPWMMotors();
-motorControls.h(40): warning:  #1295-D: Deprecated declaration InitGPIOMotors - give arg types
-  void InitGPIOMotors();
-motorControls.h(47): warning:  #1295-D: Deprecated declaration stop - give arg types
-  void stop();
-motorControls.h(61): warning:  #1-D: last line of file ends without a newline
-  #endif
-motorControls.c(118): warning:  #177-D: function "delay"  was declared but never referenced
-  static void delay(volatile uint32_t nof) {
-motorControls.c: 5 warnings, 0 errors
 compiling buzzerControls.c...
 buzzerControls.h(9): warning:  #1295-D: Deprecated declaration InitPWMBuzzer - give arg types
   void InitPWMBuzzer();
@@ -59,6 +47,19 @@ buzzerControls.h(17): warning:  #1-D: last line of file ends without a newline
 buzzerControls.c(99): warning:  #1-D: last line of file ends without a newline
   }
 buzzerControls.c: 5 warnings, 0 errors
+compiling motorControls.c...
+motorControls.h(35): warning:  #1295-D: Deprecated declaration InitPWMMotors - give arg types
+  void InitPWMMotors();
+motorControls.h(40): warning:  #1295-D: Deprecated declaration InitGPIOMotors - give arg types
+  void InitGPIOMotors();
+motorControls.h(47): warning:  #1295-D: Deprecated declaration stop - give arg types
+  void stop();
+motorControls.h(61): warning:  #1-D: last line of file ends without a newline
+  #endif
+motorControls.c(118): warning:  #177-D: function "delay"  was declared but never referenced
+  static void delay(volatile uint32_t nof) {
+motorControls.c: 5 warnings, 0 errors
+assembling startup_MKL25Z4.s...
 compiling ledControls.c...
 ledControls.h(8): warning:  #1295-D: Deprecated declaration initGPIOLed - give arg types
   void initGPIOLed();
@@ -123,10 +124,9 @@ main.c(89): warning:  #111-D: statement is unreachable
 main.c(90): warning:  #1-D: last line of file ends without a newline
   }
 main.c: 21 warnings, 0 errors
-assembling startup_MKL25Z4.s...
 compiling system_MKL25Z4.c...
 linking...
-Program Size: Code=8760 RO-data=576 RW-data=5992 ZI-data=360  
+Program Size: Code=8764 RO-data=576 RW-data=5992 ZI-data=360  
 ".\Objects\myProject.axf" - 0 Error(s), 42 Warning(s).
 
 <h2>Software Packages used:</h2>
@@ -162,26 +162,26 @@ Package Vendor: Keil
    * Component: ARM::CMSIS:CORE:5.3.0
 
    * Component: ARM::CMSIS:RTOS2:Keil RTX5:Library:5.5.1
+      Source file:   CMSIS\RTOS2\RTX\Template\MemPool.c
       Source file:   CMSIS\RTOS2\RTX\Template\Mutex.c
+      Source file:   CMSIS\RTOS2\RTX\Template\Semaphore.c
       Source file:   CMSIS\RTOS2\RTX\Template\Thread.c
+      Source file:   CMSIS\RTOS2\RTX\Template\svc_user.c
+      Source file:   CMSIS\RTOS2\RTX\Source\rtx_lib.c
+      Library file:  CMSIS\RTOS2\RTX\Library\ARM\RTX_CM0.lib
+      Source file:   CMSIS\RTOS2\RTX\Template\main.c
+      Source file:   CMSIS\RTOS2\RTX\Template\Timer.c
+      Include file:  CMSIS\RTOS2\RTX\Include\rtx_os.h
       Include file:  CMSIS\RTOS2\RTX\Config\RTX_Config.h
       Source file:   CMSIS\RTOS2\RTX\Config\RTX_Config.c
       Source file:   CMSIS\RTOS2\RTX\Template\Events.c
-      Source file:   CMSIS\RTOS2\RTX\Template\Timer.c
-      Source file:   CMSIS\RTOS2\RTX\Template\svc_user.c
-      Source file:   CMSIS\RTOS2\RTX\Template\MemPool.c
-      Source file:   CMSIS\RTOS2\RTX\Source\rtx_lib.c
-      Source file:   CMSIS\RTOS2\RTX\Template\Semaphore.c
-      Library file:  CMSIS\RTOS2\RTX\Library\ARM\RTX_CM0.lib
-      Include file:  CMSIS\RTOS2\RTX\Include\rtx_os.h
-      Source file:   CMSIS\RTOS2\RTX\Template\main.c
       Source file:   CMSIS\RTOS2\RTX\Template\MsgQueue.c
 
    * Component: Keil::Device:Startup:2.5.0
       Source file:   Device\Source\ARM\startup_MKL25Z4.s
       Source file:   Device\Source\system_MKL25Z4.c
       Include file:  Device\Source\system_MKL25Z4.h
-Build Time Elapsed:  00:00:01
+Build Time Elapsed:  00:00:02
 </pre>
 </body>
 </html>
