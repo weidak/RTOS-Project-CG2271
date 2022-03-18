@@ -11,7 +11,7 @@ int musical_notes[] = {262,294,330,349,392,440,494};
 char notes[] = "EE E CE G g C g e a h bagEG AFG E CDh C g e a h bagEG AFG E CDh  GJFS E taC aCD GJFS E V VV  GJFS E taC aCD U D C  GJFS E taC aCD GJFS E V VV  GJFS E taC aCD U D C ";
 int beats[] = {1,1,1,1,1,1,1,1,2,2,2,2,2,1,1,2,2,1,1,1,1,1,1,2,1,1,1,1,2,1,1,1,1,1,1,1,1,2,2,1,1,2,2,1,1,1,1,1,1,2,1,1,1,1,2,1,1,1,1,1,1,1,1,2,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,2,2,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,2,1,1,2,2,6,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,2,2,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,2,1,1,2,2,6};
 int songLength = sizeof(notes);
-int tempo = 0x7FFF;
+int tempo = 0xFFF;
 void InitPWMBuzzer(){
 	//Enable clock gating for PortA
 	SIM_SCGC5 |= SIM_SCGC5_PORTA_MASK;
@@ -88,9 +88,9 @@ int frequency(char note)
 
 void playSong() {
 	while (1) {
-		for (int i = 0; i < num_notes; i++) {
+		for (int i = 0; i < songLength; i++) {
 			TPM0->MOD = FREQ2MOD(frequency(notes[i])); //need a function that converts freq to mod value
-			TPM0_C2V = (FREQ2MOD(frequency(notes[i])))/2; 
+			TPM0_C2V = (FREQ2MOD(frequency(notes[i])))/5; 
 			delay_mult100(beats[i] * tempo);
 		}
 		//TPM1_C0V++;
