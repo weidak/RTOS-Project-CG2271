@@ -46,7 +46,7 @@ void InitUART2(uint32_t baud_rate) {
 	//QInit(&rx_q);
 }
 
-void UART2_IRQHandler() {
+/*void UART2_IRQHandler() {
 	
 	NVIC_ClearPendingIRQ(UART2_IRQn);
 	
@@ -57,7 +57,7 @@ void UART2_IRQHandler() {
 		else UART2->C2 &= ~UART_C2_TIE_MASK;
 	}
 	*/
-	if (UART2->S1 & UART_S1_RDRF_MASK) {
+	/*if (UART2->S1 & UART_S1_RDRF_MASK) {
 		//receives a character
 		
 		//if (!isFull(&rx_q)) enqueue(&rx_q, UART2->D);
@@ -73,4 +73,4 @@ void UART2_IRQHandler() {
 										
 		//clear flag
 	}
-}
+}*/
