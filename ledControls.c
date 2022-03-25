@@ -64,7 +64,7 @@ void onLED(uint8_t number) {
 
 void onOffLED(uint8_t number){ 
 	onLED(number);
-	osDelay(250);//delay(0xFFFF);
+	osDelay(100);//delay(0xFFFF);
 	offLED(number);
 }
 
@@ -74,9 +74,16 @@ void onAllLED(){
 	}
 }
 
-
-void runningFrontLED() {
-	for (int i = 0; i < LED_NUM; i++) onOffLED(frontledstrip[i]);
-	for (int i = LED_NUM; i >= 0; i--) onOffLED(frontledstrip[i]);
+void runningFrontLED(uint32_t* cmd) {
+	for (int i = 0; i < LED_NUM ; i++) {
+		if (cmd != 0x00) onOffLED(frontledstrip[i]);
+		else onAllLED();
+	}
+	
+	
+	for (int i = LED_NUM; i >= 0 ; i--) {
+		if (cmd != 0x00) onOffLED(frontledstrip[i]);
+		else onAllLED();
+	}
 }
 

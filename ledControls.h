@@ -15,7 +15,7 @@ void reverseState();
 void offLED(uint8_t number);
 void onLED(uint8_t number);
 void onOffLED(uint8_t number);
-void runningFrontLED();
+void runningFrontLED(uint32_t* cmd);
 void onAllLED();
 void rearLed500();
 void rearLed250();

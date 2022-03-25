@@ -6,40 +6,21 @@
 #include "motorControls.h"
 #include "uart.h"
 #include "ledControls.h"
+#include <assert.h>
 
-osMutexId_t myMutex;
+#define QUEUE_MSG_COUNT 1
 
-//TODO: Test motor controls and interrupts? 
-//TODO: See if UART is able to receive commands from esp32 board with led strips bah
+//To delete if not used in the end.
+//Can be useful if Arduino can send packets, but need to parse 32uint data
+/*
+typedef struct {
+	uint8_t cmd;
+	uint8_t data;
+} myDataPkt;
+*/
 
-void app_control_front_led(void *argument) {
-	for (;;) {
-		//osMutexAcquire(myMutex, osWaitForever);
-		runningFrontLED();
-		//osMutexRelease(myMutex);
-	}
-}
-
-void app_control_rear_led(void *argument) {
-	for(;;) {
-		//osMutexAcquire(myMutex, osWaitForever);
-		rearLed250();
-		//rearLed500();
-		//osMutexRelease(myMutex);
-	}
-}
-
-void app_control_motor(void *argument) {
-	
-	for (;;) {forwards(3500);}
-}
-
-void app_control_buzzer(void *argument) {
-	
-	for (;;) {
-		playSong();
-	}
-}
+//Initialize the msgs that control various threads.
+osMessageQueueId_t motorMsg, buzzerMsg, frontLedMsg, rearLedMsg, ledMsg;
 
 volatile uint32_t rx_data;
 
@@ -54,11 +35,10 @@ void UART2_IRQHandler() {
 		else UART2->C2 &= ~UART_C2_TIE_MASK;
 	}
 	*/
+	
 	if (UART2->S1 & UART_S1_RDRF_MASK) {
 		//receives a character
 		
-		//if (!isFull(&rx_q)) enqueue(&rx_q, UART2->D);
-		//else while (1); //queue is full, stay in interrupt?
 		rx_data = UART2->D;
 	}
 	
@@ -71,6 +51,144 @@ void UART2_IRQHandler() {
 		//clear flag
 	}
 }
+
+
+void app_control_rear_led(void* argument) {
+	volatile uint32_t receivedData;
+	for (;;) {
+		osMessageQueueGet(rearLedMsg, &receivedData, NULL, osWaitForever);
+		switch (receivedData) {
+			case 0x01:
+			case 0x02:
+			case 0x03:
+			case 0x04:
+				rearLed500();
+				break;
+			default:
+				rearLed250();
+				break;
+		}
+	}
+	
+}
+
+void app_control_front_led(void *argument) {
+	uint32_t receivedData;
+	for (;;) {
+		osMessageQueueGet(frontLedMsg, &receivedData, NULL, osWaitForever);
+		if ((rx_data == 0x01 || rx_data == 0x02 || rx_data == 0x03 || rx_data == 0x04)) {
+			assert(rx_data != 00);
+			runningFrontLED(&receivedData);
+		}
+		else {
+			onAllLED();
+		}
+		/*
+		switch (receivedData) {
+			case 0x01:
+			case 0x02:
+			case 0x03:
+			case 0x04:
+				//Individually light up the led while moving
+				runningFrontLED(receivedData);
+				break;
+			default:
+				//On front lights while stationary
+				onAllLED();
+				break;
+		}*/
+	}
+}
+/*
+void app_control_led(void *argument) {
+	uint32_t receivedData;
+	for (;;) {
+		osMessageQueueGet(ledMsg, &receivedData, NULL, osWaitForever);
+		switch (receivedData) {
+			case 0x01:
+			case 0x02:
+			case 0x03:
+			case 0x04:
+				//Individually light up the led while moving
+				runningFrontLED();
+				break;
+			default:
+				//On front lights while stationary
+				onAllLED();
+				break;
+		}
+	}
+}*/
+
+void app_control_motor(void *argument) {
+	uint32_t receivedData;
+	for (;;) {
+		osMessageQueueGet(motorMsg, &receivedData, NULL, osWaitForever);
+		switch (receivedData) {
+			case 0x01:
+				forwards(FULL_SPEED);
+				break;
+			case 0x02:
+				reverse(FULL_SPEED);
+				break;
+			case 0x03:
+				right(FULL_SPEED);
+				break;
+			case 0x04:
+				left(FULL_SPEED);
+			default:
+				stop_moving();
+				break;
+		}
+	}
+}
+
+void app_control_buzzer(void *argument) {
+	uint32_t receivedData;
+	for (;;) {
+		osMessageQueueGet(buzzerMsg, &receivedData, NULL, osWaitForever);
+		switch (receivedData) {
+			case 0x01:
+			case 0x02:
+			case 0x03:
+			case 0x04:
+				playSong(); //Play tune while moving, where 1-4 are movement commands
+				break;
+			default:
+				break; //Do nothing if not moving
+		}
+		
+	}
+}
+
+void control_threads(void *argument) {
+	//Not sure if its supposed to be in a forever while loop?
+	//rx_data will never change again until another command is sent,
+	//Hence I set the currCmd back to 0 again at the end after a configurable delay
+	uint32_t currCmd;
+	while (1) {
+		currCmd = UART2->S1 & UART_S1_RDRF_MASK ? 0x00 : rx_data; 
+		osMessageQueuePut(motorMsg, &currCmd, NULL, 0); //To update with priorities
+		osMessageQueuePut(frontLedMsg, &currCmd, NULL, 0);
+		osMessageQueuePut(rearLedMsg, &currCmd, NULL, 0);
+		osMessageQueuePut(buzzerMsg, &currCmd, NULL, 0);
+		//currCmd = 0x00; //Default state
+	}
+
+	//osDelay(500); //delay for half a second, just for buffer and testing 
+	/*
+	//For future streamlining purposes, yet to find a use
+	switch (currCmd) {
+		case 0x01:
+		case 0x02:
+		case 0x03:
+		case 0x04:
+		default:
+			
+	}
+	*/
+}
+
 
 static void delay(volatile uint32_t nof) {
   while(nof!=0) {
@@ -99,9 +217,13 @@ int main() {
 	
 	InitGPIOBuzzer();
 	InitGPIOMotors();
+	/*
 	PORTB->PCR[RED_LED] |= PORT_PCR_MUX(1);
 	PTB->PDDR |= MASK(RED_LED);
+	*/
 	rx_data = 0;
+	
+	/*
 	while (1) {
 		if (rx_data == 0x31) {
 			//F
@@ -121,13 +243,24 @@ int main() {
 		offRed();
 		//stop_moving();
 	}
+	*/
 	
 	osKernelInitialize();
-	//myMutex = osMutexNew(NULL);
-	//osThreadNew(app_control_motor, NULL, NULL);
+	
+	osThreadNew(control_threads, NULL, NULL); //Initialize the main thread that controls packets
+	osThreadNew(app_control_front_led, NULL, NULL);
+	osThreadNew(app_control_rear_led, NULL, NULL);
+	//osThreadNew(app_control_led, NULL, NULL);
 	osThreadNew(app_control_buzzer, NULL, NULL);
-	//osThreadNew(app_control_rear_led, NULL, NULL);
-	//osThreadNew(app_control_front_led, NULL, NULL);
+	osThreadNew(app_control_motor, NULL, NULL);
+	
+	//Init motor, buzzer and led msgs. Using rx_data instead of myDataPkt as we are not using structures.
+	motorMsg = osMessageQueueNew(QUEUE_MSG_COUNT, sizeof(rx_data) , NULL);
+	buzzerMsg = osMessageQueueNew(QUEUE_MSG_COUNT, sizeof(rx_data), NULL);
+	//ledMsg = osMessageQueueNew(QUEUE_MSG_COUNT, sizeof(rx_data), NULL);
+	frontLedMsg = osMessageQueueNew(QUEUE_MSG_COUNT, sizeof(rx_data), NULL);
+	rearLedMsg = osMessageQueueNew(QUEUE_MSG_COUNT, sizeof(rx_data), NULL);
+
 
 	osKernelStart();
 	
@@ -136,23 +269,4 @@ int main() {
 		//controlLED(); 
 	}
 	
-	/*
-	while (1) {
-		forwards(3750);
-		delay(0x88000);
-		
-		reverse(3750);
-		delay(0x88000);
-		
-		left(3750);
-		delay(0x88000);
-		
-		right(3750);
-		delay(0x88000);
-		
-		stop();
-		delay(0x88000);
-	}
-	*/
-	return 0;
 }

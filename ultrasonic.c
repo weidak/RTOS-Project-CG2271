@@ -27,6 +27,7 @@ static void delay(volatile uint32_t nof) {
     __asm("NOP");
     nof--;
   }
+}
 
 void startUltra() {
 	//Send a 10 us = 10^5 Hz logic 1 pulse to trigger pin to start the sensing process
@@ -74,19 +75,18 @@ void PORTD_IRQHandler() {
 	else if (PORTD->ISFR & MASK(ECHO_PIN) & !isRising) {
 		stop_time = PIT->CHANNEL[1].CVAL;
 		isRising = true;
-	}*
+	}
 	//Clear INT Flag
 	PORTD->ISFR |= 0xffffffff;
 }
 	
 float getDistance() {
-	bool isDone = 0;
+	startUltra();
 	float distance = 0;
 	float time = 0;
-	startUltra();
 	while (start_time < 0 && stop_time < 0) {
 		time = (float)(start_time - stop_time + 1) / 10485760; //convert to s
-		distance = AIR_SPEED * time //distance in cm
+		distance = AIR_SPEED * time; //distance in cm
 	}
 	NVIC_DisableIRQ(PORTD_IRQn);
 	return distance;
