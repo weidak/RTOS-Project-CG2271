@@ -9,3 +9,7 @@ PWMTest.uvprojx
 myProject.uvguix.User
 myProject.uvoptx
 myProject.uvprojx
+messagequeue.c
+messagequeue.uvguix.weida
+messagequeue.uvoptx
+messagequeue.uvprojx
