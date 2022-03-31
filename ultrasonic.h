@@ -3,14 +3,15 @@
 #ifndef ULTRASONIC_H_
 #define ULTRASONIC_H_
 
-#define TRIGGER_PIN 1	//PORTD PIN 1
-#define ECHO_PIN 3	//PORTD PIN 3
+#define TRIGGER_PIN 2	//PORTD PIN 2
+#define ECHO_PIN_RISING 3	//PORTD PIN 3
+#define ECHO_PIN_FALLING 16 //PORTA PIN 16
 
 #define MASK(x) (1UL << x)
 
 #define AIR_SPEED 34000 //air speed in cm/s
 
-void initUltra();
+void InitUltra();
 
 void startUltra();
 

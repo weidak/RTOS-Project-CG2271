@@ -7,6 +7,8 @@
 #include "uart.h"
 #include "ledControls.h"
 #include <assert.h>
+#include "ultrasonic.h"
+#include <stdio.h>
 
 #define QUEUE_MSG_COUNT 1
 
@@ -54,7 +56,7 @@ void UART2_IRQHandler() {
 
 
 void app_control_rear_led(void* argument) {
-	volatile uint32_t receivedData;
+	uint32_t receivedData;
 	for (;;) {
 		osMessageQueueGet(rearLedMsg, &receivedData, NULL, osWaitForever);
 		switch (receivedData) {
@@ -213,16 +215,28 @@ int main() {
 	
 	InitUART2(BAUD_RATE);
 	InitPWMMotors();
-	InitPWMBuzzer();
+	//InitPWMBuzzer();
 	
-	InitGPIOBuzzer();
-	InitGPIOMotors();
-	/*
+	//InitGPIOBuzzer();
+	//InitGPIOMotors();
+	
+	InitUltra();
+	
+	SIM_SCGC5 |= SIM_SCGC5_PORTB_MASK;
+	PORTB->PCR[RED_LED] &= ~PORT_PCR_MUX_MASK;
 	PORTB->PCR[RED_LED] |= PORT_PCR_MUX(1);
 	PTB->PDDR |= MASK(RED_LED);
-	*/
-	rx_data = 0;
 	
+	rx_data = 0;
+	//forwards(SLOW_SPEED);
+
+	while (1) {
+		onRed();
+		float distance = getDistance();
+		if (distance < 20) {
+			offRed();
+		}
+	}
 	/*
 	while (1) {
 		if (rx_data == 0x31) {
@@ -244,7 +258,7 @@ int main() {
 		//stop_moving();
 	}
 	*/
-	
+	/*
 	osKernelInitialize();
 	
 	osThreadNew(control_threads, NULL, NULL); //Initialize the main thread that controls packets
@@ -268,5 +282,5 @@ int main() {
 		//onAllLED();
 		//controlLED(); 
 	}
-	
+	*/
 }
