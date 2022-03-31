@@ -408,11 +408,6 @@
               <FilePath>.\uart.c</FilePath>
             </File>
             <File>
-              <FileName>ultrasonic.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\ultrasonic.c</FilePath>
-            </File>
-            <File>
               <FileName>buzzerControls.h</FileName>
               <FileType>5</FileType>
               <FilePath>.\buzzerControls.h</FilePath>
@@ -433,9 +428,14 @@
               <FilePath>.\uart.h</FilePath>
             </File>
             <File>
-              <FileName>ultrasonic.h</FileName>
+              <FileName>ultraTPM.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\ultraTPM.c</FilePath>
+            </File>
+            <File>
+              <FileName>ultraTPM.h</FileName>
               <FileType>5</FileType>
-              <FilePath>.\ultrasonic.h</FilePath>
+              <FilePath>.\ultraTPM.h</FilePath>
             </File>
           </Files>
         </Group>
