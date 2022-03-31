@@ -1,4 +1,6 @@
-#include "MKL25Z4.h"                    // Device header
+#include "MKL25Z4.h"  // Device header
+#include "RTE_Components.h"             // Component selection
+#include "cmsis_os2.h"                  // ::CMSIS:RTOS2
 
 #ifndef ULTRASONIC_H_
 #define ULTRASONIC_H_

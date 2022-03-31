@@ -80,9 +80,9 @@ void TPM0_IRQHandler() {
 float getDistance() {
 	//manually on off the trigger pin
 	PTE->PDOR |= MASK(TRIGGER_PIN);
-	delay(0x100);
+	osDelay(1); // delay(0x100);
 	PTE->PDOR &= ~MASK(TRIGGER_PIN);
-	delay(0x3333);//ard 30 ms delay to read start and stop time
+	osDelay(30); // delay(0x3333);//ard 30 ms delay to read start and stop time
 	uint32_t start = start_time;
 	uint32_t stop = stop_time;
 	float time = ((float)(stop_time - start_time)) / 375000.0;
