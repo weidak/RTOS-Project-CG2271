@@ -7,7 +7,7 @@
 #include "uart.h"
 #include "ledControls.h"
 #include <assert.h>
-#include "ultrasonic.h"
+//#include "ultrasonic.h"
 #include <stdio.h>
 
 #define QUEUE_MSG_COUNT 1
@@ -59,6 +59,14 @@ void UART2_IRQHandler() {
 				break;
 			case 0x05:
 				osEventFlagsSet(buzzer_flag, 0x0001);
+				break;
+			case 0x06:
+				break;
+			case 0x07: //set flag for self driving mode
+					
+				break;
+			case 0x08: //set flag for remote mode
+				
 				break;
 			default:
 				break;

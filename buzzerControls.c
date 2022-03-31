@@ -73,8 +73,6 @@ void playSong() {
 			osSemaphoreRelease(buzzerSem);
 			osDelay(beats[i] * tempo); //delay_mult100(beats[i] * tempo);
 		}
-		//TPM1_C0V++;
-		//delay_mult100(0xffff);
 	}
 }
 
