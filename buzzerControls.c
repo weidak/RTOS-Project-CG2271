@@ -1,4 +1,3 @@
-#include "MKL25Z4.h"                    // Device header
 #include "buzzerControls.h"
 
 #define MASK(x) (1<<(x))
@@ -11,7 +10,8 @@ int musical_notes[] = {262,294,330,349,392,440,494};
 char notes[] = "EE E CE G g C g e a h bagEG AFG E CDh C g e a h bagEG AFG E CDh  GJFS E taC aCD GJFS E V VV  GJFS E taC aCD U D C  GJFS E taC aCD GJFS E V VV  GJFS E taC aCD U D C ";
 int beats[] = {1,1,1,1,1,1,1,1,2,2,2,2,2,1,1,2,2,1,1,1,1,1,1,2,1,1,1,1,2,1,1,1,1,1,1,1,1,2,2,1,1,2,2,1,1,1,1,1,1,2,1,1,1,1,2,1,1,1,1,1,1,1,1,2,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,2,2,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,2,1,1,2,2,6,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,2,2,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,2,1,1,2,2,6};
 int songLength = sizeof(notes);
-int tempo = 0xFFF;
+int tempo = 150;
+
 void InitPWMBuzzer(){
 	//Enable clock gating for PortA
 	SIM_SCGC5 |= SIM_SCGC5_PORTA_MASK;
@@ -53,47 +53,38 @@ void delay_mult100(volatile uint32_t nof) {
 	}
 }
 
-int frequency(char note) 
-{
-  // This function takes a note character (a-g), and returns the
-  // corresponding frequency in Hz for the tone() function.
-  
-  int i;
-  const int numNotes = 19;  // number of notes we're storing
-  
-  // The following arrays hold the note characters and their
-  // corresponding frequencies. The last "C" note is uppercase
-  // to separate it from the first lowercase "c". If you want to
-  // add more notes, you'll need to use unique characters.
-
-  // For the "char" (character) type, we put single characters
-  // in single quotes.
-
+int frequency(char note) {
+  //int numNotes = 19; 
   char names[] = { 'c', 'd', 'e', 'f', 'g', 't', 'a', 'b', 'h', 'C' , 'D' , 'S' , 'E', 'F' , 'J', 'G' , 'A' , 'V' , 'U'};
   int frequencies[] = {262, 294, 330, 349, 392, 415 , 440, 466 , 494, 523, 587, 622 , 659, 698, 740, 784, 880 , 1047 , 622};
-  
-  // Now we'll search through the letters in the array, and if
-  // we find it, we'll return the frequency for that note.
-  
-  for (i = 0; i < numNotes; i++)  // Step through the notes
-  {
-    if (names[i] == note)         // Is this the one?
-    {
-      return(frequencies[i]);     // Yes! Return the frequency
-    }
+ 
+  for (int i = 0; i < sizeof(frequencies); i++) {
+    if (names[i] == note) return(frequencies[i]);  
   }
-  return(0);  // We looked through everything and didn't find it,
-              // but we still need to return a value, so return 0.
+  return 0;  
 }
 
 void playSong() {
 	while (1) {
 		for (int i = 0; i < songLength; i++) {
+			osSemaphoreAcquire(buzzerSem, osWaitForever);
 			TPM0->MOD = FREQ2MOD(frequency(notes[i])); //need a function that converts freq to mod value
-			TPM0_C2V = (FREQ2MOD(frequency(notes[i])))/5; 
-			delay_mult100(beats[i] * tempo);
+			TPM0_C2V = (FREQ2MOD(frequency(notes[i])))/5; //20% Duty Cycle
+			osSemaphoreRelease(buzzerSem);
+			osDelay(beats[i] * tempo); //delay_mult100(beats[i] * tempo);
 		}
 		//TPM1_C0V++;
 		//delay_mult100(0xffff);
+	}
+}
+
+void playCompletedSong() {
+	while (1) {
+		for (int i = 0; i < num_notes; i++) {
+			osSemaphoreAcquire(buzzerSem, osWaitForever);
+			TPM0->MOD = FREQ2MOD(musical_notes[i]); //need a function that converts freq to mod value
+			TPM0_C2V = (FREQ2MOD(musical_notes[i]))/5; //20% Duty Cycle
+			osSemaphoreRelease(buzzerSem);
+		}
 	}
 }

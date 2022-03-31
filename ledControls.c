@@ -72,18 +72,19 @@ void onAllLED(){
 	for (int i = 0; i < LED_NUM; i++) {
 		onLED(frontledstrip[i]);
 	}
+	osDelay(100);
 }
 
-void runningFrontLED(uint32_t* cmd) {
-	for (int i = 0; i < LED_NUM ; i++) {
-		if (cmd != 0x00) onOffLED(frontledstrip[i]);
-		else onAllLED();
+void runningFrontLED() {
+	
+	//Off all LEDs first
+	for (int i = 0; i < LED_NUM; i++) {
+		offLED(frontledstrip[i]);
 	}
 	
-	
-	for (int i = LED_NUM; i >= 0 ; i--) {
-		if (cmd != 0x00) onOffLED(frontledstrip[i]);
-		else onAllLED();
+	//Iterate 1 by 1
+	for (int i = 0; i < LED_NUM ; i++) {
+		onOffLED(frontledstrip[i]);
 	}
 }
 

@@ -20,7 +20,15 @@ typedef struct {
 */
 
 //Initialize the msgs that control various threads.
-osMessageQueueId_t motorMsg, buzzerMsg, frontLedMsg, rearLedMsg, ledMsg;
+const osThreadAttr_t priorityAboveNormal = {
+  .priority = osPriorityAboveNormal
+};
+
+osMessageQueueId_t motorMsg, buzzerMsg, frontLedMsg, rearLedMsg, completedBuzzerMsg;
+
+osEventFlagsId_t buzzer_flag;
+
+osSemaphoreId_t buzzerSem;
 
 volatile uint32_t rx_data;
 
@@ -40,6 +48,19 @@ void UART2_IRQHandler() {
 		//receives a character
 		
 		rx_data = UART2->D;
+		//For easy setting of event flags
+		switch(rx_data) {
+			case 0x01:
+			case 0x02:
+			case 0x03:
+			case 0x04:
+				break;
+			case 0x05:
+				osEventFlagsSet(buzzer_flag, 0x0001);
+				break;
+			default:
+				break;
+		}
 	}
 	
 	if (UART2->S1 & (UART_S1_OR_MASK 
@@ -54,7 +75,7 @@ void UART2_IRQHandler() {
 
 
 void app_control_rear_led(void* argument) {
-	volatile uint32_t receivedData;
+	uint32_t receivedData;
 	for (;;) {
 		osMessageQueueGet(rearLedMsg, &receivedData, NULL, osWaitForever);
 		switch (receivedData) {
@@ -72,53 +93,25 @@ void app_control_rear_led(void* argument) {
 	
 }
 
+
+
 void app_control_front_led(void *argument) {
 	uint32_t receivedData;
 	for (;;) {
 		osMessageQueueGet(frontLedMsg, &receivedData, NULL, osWaitForever);
-		if ((rx_data == 0x01 || rx_data == 0x02 || rx_data == 0x03 || rx_data == 0x04)) {
-			assert(rx_data != 00);
-			runningFrontLED(&receivedData);
-		}
-		else {
-			onAllLED();
-		}
-		/*
 		switch (receivedData) {
 			case 0x01:
 			case 0x02:
 			case 0x03:
 			case 0x04:
-				//Individually light up the led while moving
-				runningFrontLED(receivedData);
-				break;
-			default:
-				//On front lights while stationary
-				onAllLED();
-				break;
-		}*/
-	}
-}
-/*
-void app_control_led(void *argument) {
-	uint32_t receivedData;
-	for (;;) {
-		osMessageQueueGet(ledMsg, &receivedData, NULL, osWaitForever);
-		switch (receivedData) {
-			case 0x01:
-			case 0x02:
-			case 0x03:
-			case 0x04:
-				//Individually light up the led while moving
 				runningFrontLED();
 				break;
 			default:
-				//On front lights while stationary
 				onAllLED();
-				break;
 		}
 	}
-}*/
+}
+
 
 void app_control_motor(void *argument) {
 	uint32_t receivedData;
@@ -154,39 +147,33 @@ void app_control_buzzer(void *argument) {
 			case 0x04:
 				playSong(); //Play tune while moving, where 1-4 are movement commands
 				break;
+			case 0x05: // When the robot finishes moving
+				playCompletedSong();
 			default:
 				break; //Do nothing if not moving
 		}
-		
+	}
+}
+
+void app_control_completed_buzzer(void *argument) {
+	uint32_t receivedData;
+	for (;;) {
+		osMessageQueueGet(completedBuzzerMsg, &receivedData, NULL, osWaitForever);
+		osEventFlagsWait(buzzer_flag, 0x0001, osFlagsWaitAny, osWaitForever);
+		playCompletedSong();
 	}
 }
 
 void control_threads(void *argument) {
-	//Not sure if its supposed to be in a forever while loop?
-	//rx_data will never change again until another command is sent,
-	//Hence I set the currCmd back to 0 again at the end after a configurable delay
 	uint32_t currCmd;
 	while (1) {
-		currCmd = UART2->S1 & UART_S1_RDRF_MASK ? 0x00 : rx_data; 
-		osMessageQueuePut(motorMsg, &currCmd, NULL, 0); //To update with priorities
-		osMessageQueuePut(frontLedMsg, &currCmd, NULL, 0);
-		osMessageQueuePut(rearLedMsg, &currCmd, NULL, 0);
-		osMessageQueuePut(buzzerMsg, &currCmd, NULL, 0);
-		//currCmd = 0x00; //Default state
+		currCmd = rx_data; 
+		osMessageQueuePut(completedBuzzerMsg, &currCmd, 1U, 0); //should compete for semaphore and buzzerMsg will not be able to obtain semaphore
+		osMessageQueuePut(buzzerMsg, &currCmd, 0U, 0);
+		osMessageQueuePut(motorMsg, &currCmd, 0U, 0); //To update with priorities
+		osMessageQueuePut(frontLedMsg, &currCmd, 0U, 0);
+		osMessageQueuePut(rearLedMsg, &currCmd, 0U, 0);
 	}
-
-	//osDelay(500); //delay for half a second, just for buffer and testing 
-	/*
-	//For future streamlining purposes, yet to find a use
-	switch (currCmd) {
-		case 0x01:
-		case 0x02:
-		case 0x03:
-		case 0x04:
-		default:
-			
-	}
-	*/
 }
 
 
@@ -207,6 +194,7 @@ void offRed() {
 	PTB->PDOR |= MASK(RED_LED);
 }
 
+
 int main() {
 	SystemCoreClockUpdate();
 	initGPIOLed();
@@ -223,41 +211,23 @@ int main() {
 	*/
 	rx_data = 0;
 	
-	/*
-	while (1) {
-		if (rx_data == 0x31) {
-			//F
-			onRed();
-			forwards(HALF_SPEED);
-		}
-		else if (rx_data == 0x32) {
-			reverse(HALF_SPEED);
-		}
-		else if (rx_data == 0x33) {
-			left(HALF_SPEED);
-		}
-		else if (rx_data == 0x34) {
-			right(HALF_SPEED);
-		}
-		//delay(0x800000);
-		offRed();
-		//stop_moving();
-	}
-	*/
+	buzzer_flag = osEventFlagsNew(NULL);
 	
 	osKernelInitialize();
+	
+	buzzerSem = osSemaphoreNew(1, 1, NULL); //1 available so can start tune immediately
 	
 	osThreadNew(control_threads, NULL, NULL); //Initialize the main thread that controls packets
 	osThreadNew(app_control_front_led, NULL, NULL);
 	osThreadNew(app_control_rear_led, NULL, NULL);
-	//osThreadNew(app_control_led, NULL, NULL);
 	osThreadNew(app_control_buzzer, NULL, NULL);
 	osThreadNew(app_control_motor, NULL, NULL);
+	osThreadNew(app_control_completed_buzzer, NULL, NULL);
 	
 	//Init motor, buzzer and led msgs. Using rx_data instead of myDataPkt as we are not using structures.
 	motorMsg = osMessageQueueNew(QUEUE_MSG_COUNT, sizeof(rx_data) , NULL);
 	buzzerMsg = osMessageQueueNew(QUEUE_MSG_COUNT, sizeof(rx_data), NULL);
-	//ledMsg = osMessageQueueNew(QUEUE_MSG_COUNT, sizeof(rx_data), NULL);
+	completedBuzzerMsg = osMessageQueueNew(QUEUE_MSG_COUNT, sizeof(rx_data), NULL);
 	frontLedMsg = osMessageQueueNew(QUEUE_MSG_COUNT, sizeof(rx_data), NULL);
 	rearLedMsg = osMessageQueueNew(QUEUE_MSG_COUNT, sizeof(rx_data), NULL);
 
