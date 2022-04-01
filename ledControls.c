@@ -17,7 +17,7 @@ static void delay(volatile uint32_t nof) {
 	}
 }
 
-void initGPIOLed(){
+void InitGPIOLed(){
 	//Enable clock gating for portc
 	SIM_SCGC5 |= SIM_SCGC5_PORTC_MASK;
 	

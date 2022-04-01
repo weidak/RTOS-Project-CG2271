@@ -28,7 +28,7 @@ const osThreadAttr_t priorityAboveNormal = {
 
 osMessageQueueId_t motorMsg, buzzerMsg, frontLedMsg, rearLedMsg, completedBuzzerMsg, selfDrivingMsg;
 
-osEventFlagsId_t buzzer_flag, self_driving_flag, remote_flag;
+osEventFlagsId_t buzzer_flag, self_driving_flag, remote_flag, movement_flag;
 
 osSemaphoreId_t buzzerSem;
 
@@ -68,12 +68,9 @@ void UART2_IRQHandler() {
 			case 0x02:
 			case 0x03:
 			case 0x04:
-				break;
 			case 0x05:
-				osEventFlagsSet(buzzer_flag, 0x0001); //temporary means to switch the buzzer to completed tune
-				break;
 			case 0x06:
-				osEventFlagsSet(buzzer_flag, 0x0000); //temporary means to switch the buzzer back to mario
+				osEventFlagsSet(movement_flag, 0x0001);
 				break;
 			case 0x07: //set flag for self driving mode
 				osEventFlagsSet(self_driving_flag, 0x0001);
@@ -83,7 +80,11 @@ void UART2_IRQHandler() {
 				osEventFlagsSet(self_driving_flag, 0x0000);
 				osEventFlagsSet(remote_flag, 0x0001);
 				break;
+			case 0x09:
+				osEventFlagsSet(buzzer_flag, 0x0001); //temporary means to switch the buzzer to completed tune
+				break;
 			default:
+				osEventFlagsSet(movement_flag, 0x0000);
 				break;
 		}
 	}
@@ -94,7 +95,8 @@ void UART2_IRQHandler() {
 	}
 }
 
-int state = 0;
+volatile int state = 0;
+volatile float distance;
 
 void app_self_driving(void *argument) {
 	uint32_t receivedData;
@@ -104,16 +106,150 @@ void app_self_driving(void *argument) {
 		//Reset counter
 		//start_time = 0;
 		//stop_time = 0;
-		TPM0_SC &= ~TPM_SC_CMOD_MASK;
-		TPM0->SC |= TPM_SC_CMOD(1);
-		TPM0_C4SC |= TPM_CnSC_CHIE_MASK | TPM_CnSC_ELSA(1) | TPM_CnSC_ELSB(1);
-		TPM0_CNT = 0;
-		PIT->CHANNEL[0].LDVAL = 104;
-		//Enable interrupts for PIT and TPM0
-		NVIC_EnableIRQ(TPM0_IRQn);
-		NVIC_EnableIRQ(PIT_IRQn);
-		float distance = getDistance();
+		while (1) {
+			distance = DISTANCE_THRESHOLD;
+			TPM0_SC &= ~TPM_SC_CMOD_MASK;
+			TPM0->SC |= TPM_SC_CMOD(1);
+			TPM0_C4SC |= TPM_CnSC_CHIE_MASK | TPM_CnSC_ELSA(1) | TPM_CnSC_ELSB(1);
+			TPM0_CNT = 0;
+			PIT->CHANNEL[0].LDVAL = 104;
+			//Enable interrupts for PIT and TPM0
+			NVIC_EnableIRQ(TPM0_IRQn);
+			NVIC_EnableIRQ(PIT_IRQn);
+			distance = getDistance();
+			float currDist = distance;
+			int i = 0;
+		//distance = 21;
+			//if (distance > 20) forwards(HALF_SPEED);
+			/*if (distance < 20) {
+			onRed(); //for visual confirmation
+			} 
+			else{
+				offRed();
+			}*/
+			while (distance >= DISTANCE_THRESHOLD) {
+					offRed();
+					distance = getDistance();
+					forwards(SD_SPEED);
+				}
+				onRed();
+				stop_moving();
+				delay(DELAY_STOP);
+				
+				left45(SD_SPEED); 
+				delay(DELAY_LEFT_TURN);
+				
+				forwards(SD_SPEED); 
+				delay(DELAY_STRAIGHT);
+				stop_moving();
+				delay(DELAY_STOP);
+				right90(SD_SPEED);
+				delay(DELAY_RIGHT_TURN);
+				
+				forwards(SD_SPEED); 
+				delay(DELAY_STRAIGHT);
+				stop_moving();
+				delay(DELAY_STOP);
+				right90(SD_SPEED);
+				delay(DELAY_RIGHT_TURN);
+				
+				forwards(SD_SPEED); 
+				delay(DELAY_STRAIGHT);
+				stop_moving();
+				delay(DELAY_STOP);
+				right90(SD_SPEED);
+				delay(DELAY_RIGHT_TURN);
+				
+				forwards(SD_SPEED); 
+				delay(DELAY_STRAIGHT);
+				stop_moving();
+				delay(DELAY_STOP);
+						
+				left45(SD_SPEED);
+				delay(DELAY_LEFT_TURN);
 		
+				offRed();
+				delay(DELAY_STOP);
+				
+				distance = getDistance();
+				while (distance >= DISTANCE_THRESHOLD) {
+					onRed();
+					distance = getDistance();
+					float dist = distance;
+					forwards(SD_SPEED);
+				}
+				offRed();
+				stop_moving();
+				delay(DELAY_STOP);
+				break;
+			
+			/*switch (state) {
+				case 0: //Object Detection State
+					onRed(); //Object not yet detected
+					forwards(SD_SPEED);
+					if (distance < DISTANCE_THRESHOLD) {
+						offRed(); //for visual confirmation that it has been detected
+						stop_moving();
+						delay(DELAY_STOP);
+						state++; 
+					} 
+					break;
+				case 1: //Turn 45 degrees left
+					left45(SD_SPEED); 
+					delay(DELAY_LEFT_TURN);
+					state++;
+					break;
+				case 2: //Repeat 3 times
+				case 3:
+				case 4:
+					/*forwards(SD_SPEED); 
+					delay(DELAY_STRAIGHT);
+					stop_moving();
+					delay(DELAY_STOP);
+					right90(SD_SPEED);
+					delay(DELAY_RIGHT_TURN);
+					state++;
+					offRed();
+					stop_moving();
+					break;
+				case 5: //Last straight
+					forwards(SD_SPEED); 
+					delay(DELAY_STRAIGHT);
+					stop_moving();
+					delay(DELAY_STOP);
+					state++;
+					break;
+				case 6: //Turn 45 degrees left
+					left45(SD_SPEED);
+					delay(DELAY_LEFT_TURN);
+					state++;
+					break;
+				case 7: //State to return to the start. Similar to state 1
+					if (distance < DISTANCE_THRESHOLD) {
+						//for visual confirmation that it has been detected
+						offRed(); 
+						stop_moving();
+						//state = 0;
+						//Exit self-driving mode by itself
+						//osEventFlagsSet(self_driving_flag, 0x0000);
+						//osEventFlagsSet(remote_flag, 0x0001);
+					} else {
+						//Object not yet detected
+						onRed(); 
+						forwards(SD_SPEED); 
+					}
+					state++;
+					break;
+				default: 
+					//If somehow it reaches here, it forces it back to initial state
+					delay(0x80000);
+					state = 0;
+			}
+			//osDelay(20);
+		}*/
+
+
+		/*
 		switch (state) {
 			case 0: //Object Detection State
 				if (distance < DISTANCE_THRESHOLD) {
@@ -125,15 +261,54 @@ void app_self_driving(void *argument) {
 					forwards(SD_SPEED); 
 				}
 				break;
-			case 1: //To configure turn 90 left
-				left(SD_SPEED); 
-				osDelay(TURN_DELAY);
+			case 1: //Turn 45 degrees left
+				left45(SD_SPEED); 
+				osDelay(DELAY_LEFT_TURN);
+				state++;
+				break;
+			case 2: //Repeat 3 times
+			case 3:
+			case 4:
 				forwards(SD_SPEED); 
-			default:
+				osDelay(DELAY_STRAIGHT);
+				stop_moving();
+				osDelay(DELAY_STOP);
+				right90(SD_SPEED);
+				osDelay(DELAY_RIGHT_TURN);
+				state++;
+				break;
+			case 5: //Last straight
+				forwards(SD_SPEED); 
+				osDelay(DELAY_STRAIGHT);
+				stop_moving();
+				osDelay(DELAY_STOP);
+				state++;
+				break;
+			case 6: //Turn 45 degrees left
+				left45(SD_SPEED);
+				osDelay(DELAY_LEFT_TURN);
+				state++;
+			case 7: //State to return to the start. Similar to state 1
+				if (distance < DISTANCE_THRESHOLD) {
+					//for visual confirmation that it has been detected
+					offRed(); 
+					stop_moving();
+					state = 0;
+					//Exit self-driving mode by itself
+					osEventFlagsSet(self_driving_flag, 0x0000);
+					osEventFlagsSet(remote_flag, 0x0001);
+				} else {
+					//Object not yet detected
+					onRed(); 
+					forwards(SD_SPEED); 
+				}
+			default: 
+				//If somehow it reaches here, it forces it back to initial state
 				state = 0;
 				break;
 		}
-
+		*/
+	}
 	}
 }
 
@@ -167,6 +342,8 @@ void app_control_front_led(void *argument) {
 			case 0x02:
 			case 0x03:
 			case 0x04:
+			case 0x05:
+			case 0x06:
 			case 0x07: //incl self-driving mode
 				runningFrontLED();
 				break;
@@ -180,6 +357,7 @@ void app_control_front_led(void *argument) {
 void app_control_motor(void *argument) {
 	uint32_t receivedData;
 	for (;;) {
+		//osEventFlagsWait(movement_flag, 0x0001, osFlagsWaitAny, osWaitForever);
 		osMessageQueueGet(motorMsg, &receivedData, NULL, osWaitForever);
 		switch (receivedData) {
 			case 0x01:
@@ -189,10 +367,19 @@ void app_control_motor(void *argument) {
 				reverse(FULL_SPEED);
 				break;
 			case 0x03:
-				right(FULL_SPEED);
+				right(SLOW_SPEED);
 				break;
 			case 0x04:
-				left(FULL_SPEED);
+				left(SLOW_SPEED);
+				break;
+			case 0x05:
+				left45(SLOW_SPEED);
+				osDelay(DELAY_LEFT_TURN);
+				break;
+			case 0x06:
+				right90(SLOW_SPEED);
+				osDelay(DELAY_RIGHT_TURN);
+				break;
 			default:
 				stop_moving();
 				break;
@@ -211,7 +398,7 @@ void app_control_buzzer(void *argument) {
 			case 0x04:
 				playSong(); //Play tune while moving, where 1-4 are movement commands
 				break;
-			case 0x05: // When the robot finishes moving
+			case 0x09: // When the robot finishes moving
 				playCompletedSong();
 			default:
 				break; //Do nothing if not moving
@@ -233,9 +420,9 @@ void control_threads(void *argument) {
 	while (1) {
 		currCmd = rx_data; 
 		osMessageQueuePut(selfDrivingMsg, &currCmd, 2U, 0);
-		osMessageQueuePut(completedBuzzerMsg, &currCmd, 1U, 0); //should compete for semaphore and buzzerMsg will not be able to obtain semaphore
+		//osMessageQueuePut(completedBuzzerMsg, &currCmd, 1U, 0); //should compete for semaphore and buzzerMsg will not be able to obtain semaphore
 		osMessageQueuePut(buzzerMsg, &currCmd, 0U, 0);
-		osMessageQueuePut(motorMsg, &currCmd, 0U, 0); //To update with priorities
+		osMessageQueuePut(motorMsg, &currCmd, 1U, 0); //To update with priorities
 		osMessageQueuePut(frontLedMsg, &currCmd, 0U, 0);
 		osMessageQueuePut(rearLedMsg, &currCmd, 0U, 0);
 	}
@@ -270,6 +457,7 @@ int main() {
 	buzzer_flag = osEventFlagsNew(NULL);
 	self_driving_flag = osEventFlagsNew(NULL);
 	remote_flag = osEventFlagsNew(NULL);
+	movement_flag = osEventFlagsNew(NULL); 
 	
 	//Default to remote mode
 	osEventFlagsSet(remote_flag, 0x0001); 
@@ -315,6 +503,7 @@ int main() {
 	osThreadNew(app_control_buzzer, NULL, NULL);
 	osThreadNew(app_control_motor, NULL, NULL);
 	osThreadNew(app_control_completed_buzzer, NULL, NULL);
+	osThreadNew(app_self_driving, NULL, &priorityAboveNormal); //should put it to a higher priority actually...
 	
 	//Init motor, buzzer and led msgs. Using rx_data instead of myDataPkt as we are not using structures.
 	motorMsg = osMessageQueueNew(QUEUE_MSG_COUNT, sizeof(rx_data) , NULL);

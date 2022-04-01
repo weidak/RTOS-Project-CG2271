@@ -6,7 +6,7 @@
 #define LEDCONTROLS_H_
 
 //Initialisation of GPIO and PORTC to control flashing of LEDs
-void initGPIOLed();
+void InitGPIOLed();
 
 //TODO: States
 void forwardState();
