@@ -145,48 +145,50 @@ void app_self_driving(void *argument) {
 			else{
 				offRed();
 			}*/
+			distance = DISTANCE_THRESHOLD;
 			while (distance >= DISTANCE_THRESHOLD) {
 					offRed();
 					distance = getDistance();
-					move(CMD_FORWARD, SD_SPEED); 
+					forwards(SD_SPEED); 
 			}
 			onRed();
-			move(CMD_STOP, SD_SPEED); 
+			stop_moving();
 			osDelay(DELAY_STOP);
-			move(CMD_LEFT45, SD_SPEED);   //45 degree 
-			osDelay(DELAY_LEFT_TURN);
+			left45(SD_SPEED); // move(CMD_STOP, SD_SPEED); //
+			//osDelay(DELAY_STOP);
+			//move(CMD_LEFT45, SD_SPEED);   //45 degree 
+			//osDelay(DELAY_LEFT_TURN);
 
-			move(CMD_FORWARD, SD_SPEED); 
+			forwards(SD_SPEED); //move(CMD_FORWARD, SD_SPEED); 
 			osDelay(DELAY_STRAIGHT);
-			move(CMD_STOP, SD_SPEED);   
-			osDelay(DELAY_STOP);
-			move(CMD_RIGHT90, SD_SPEED); //90 degree
-			osDelay(DELAY_RIGHT_TURN);
+			stop_moving(); //move(CMD_STOP, SD_SPEED);   
+			osDelay(DELAY_STOP);//osDelay(DELAY_STOP);
+			right90(SD_SPEED); //move(CMD_RIGHT90, SD_SPEED); //90 degree
+			//osDelay(DELAY_RIGHT_TURN);
 			
-			move(CMD_FORWARD, SD_SPEED);  
+			forwards(SD_SPEED); //move(CMD_FORWARD, SD_SPEED);  
 			osDelay(DELAY_STRAIGHT);
-			move(CMD_STOP, SD_SPEED);  
+			stop_moving();//move(CMD_STOP, SD_SPEED);  
 			osDelay(DELAY_STOP);
-			move(CMD_RIGHT90, SD_SPEED); //90 degree
-			osDelay(DELAY_RIGHT_TURN);
+			right90(SD_SPEED); //move(CMD_RIGHT90, SD_SPEED); //90 degree
+			//osDelay(DELAY_RIGHT_TURN);
 			
-			move(CMD_FORWARD, SD_SPEED); 
+			forwards(SD_SPEED); //move(CMD_FORWARD, SD_SPEED);  
 			osDelay(DELAY_STRAIGHT);
-			move(CMD_STOP, SD_SPEED);  
-			osDelay(DELAY_STOP);
-			move(CMD_RIGHT90, SD_SPEED);  //90 degree
-			osDelay(DELAY_RIGHT_TURN);
+			stop_moving(); //move(CMD_STOP, SD_SPEED);  
+			osDelay(DELAY_STOP);//osDelay(DELAY_STOP);
+			right90(SD_SPEED); //move(CMD_RIGHT90, SD_SPEED); //90 degree
+			//osDelay(DELAY_RIGHT_TURN);
 			
-			move(CMD_FORWARD, SD_SPEED); 
+			forwards(SD_SPEED); //move(CMD_FORWARD, SD_SPEED);  
 			osDelay(DELAY_STRAIGHT);
-			move(CMD_STOP, SD_SPEED);  
+			stop_moving();//move(CMD_STOP, SD_SPEED);  
 			osDelay(DELAY_STOP);
 					
-			move(CMD_LEFT45, SD_SPEED);  //45 degree
-			osDelay(DELAY_LEFT_TURN);
+			left45(SD_SPEED); // move(CMD_STOP, SD_SPEED); //
+			//osDelay(DELAY_STOP);
 		
 			offRed();
-			osDelay(DELAY_STOP);
 			
 			distance = getDistance();
 			while (distance >= DISTANCE_THRESHOLD) {
@@ -378,10 +380,10 @@ void app_control_motor(void *argument) {
 		osMessageQueueGet(motorMsg, &receivedData, NULL, osWaitForever);
 		switch (receivedData) {
 			case 0x01:
-				forwards(FULL_SPEED);
+				left45(FULL_SPEED); //forwards(FULL_SPEED); // 
 				break;
 			case 0x02:
-				reverse(FULL_SPEED);
+				right90(FULL_SPEED); //;reverse(FULL_SPEED); // 
 				break;
 			case 0x03:
 				right(SLOW_SPEED);
@@ -396,6 +398,9 @@ void app_control_motor(void *argument) {
 			case 0x06:
 				right90(SLOW_SPEED);
 				osDelay(DELAY_RIGHT_TURN);
+				break;
+			case 0x07: //self driving mode
+				//do nothing, should not stop moving
 				break;
 			default:
 				stop_moving();

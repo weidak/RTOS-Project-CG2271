@@ -69,12 +69,20 @@ void left(uint32_t speed) {
 	REV_RIGHT_WHEELS = 0;
 }
 
-//TODO: fix up the speed values for left 90 degree
-void left45(uint32_t speed) {
+void left_stationary(uint32_t speed) {
 	FORW_LEFT_WHEELS = 0;
 	FORW_RIGHT_WHEELS = speed;
-	REV_LEFT_WHEELS = speed;
-	REV_RIGHT_WHEELS = 0;
+	REV_LEFT_WHEELS = 0;
+	REV_RIGHT_WHEELS = speed;
+}
+
+//TODO: fix up the speed values for left 90 degree
+void left45(uint32_t speed) {
+	left_stationary(speed);
+	osDelay(350);
+	stop_moving();
+	osDelay(100);
+	
 }
 
 //TODO: fix up the speed values for turning right while moving
@@ -85,12 +93,20 @@ void right(uint32_t speed) {
 	REV_RIGHT_WHEELS = 0;
 }
 
-//TODO: fix up the speed values for right 90 degree
-void right90(uint32_t speed) {
+void right_stationary(uint32_t speed) {
 	FORW_LEFT_WHEELS = speed;
 	FORW_RIGHT_WHEELS = 0;
-	REV_LEFT_WHEELS = 0;
-	REV_RIGHT_WHEELS = speed;
+	REV_LEFT_WHEELS = speed;
+	REV_RIGHT_WHEELS = 0;
+}
+
+//TODO: fix up the speed values for right 90 degree
+void right90(uint32_t speed) {
+	right_stationary(speed);
+	osDelay(550);
+	stop_moving();
+	osDelay(100);
+	
 }
 
 void stop_moving() {
