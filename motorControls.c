@@ -1,5 +1,6 @@
 #include "MKL25Z4.h"                    // Device header
 #include "motorControls.h"
+#include "ultrasonic.h"
 #include <stdarg.h>
 
 void InitPWMMotors(){
@@ -79,9 +80,9 @@ void left_stationary(uint32_t speed) {
 //TODO: fix up the speed values for left 90 degree
 void left45(uint32_t speed) {
 	left_stationary(speed);
-	osDelay(350);
+	osDelay(DELAY_LEFT_TURN);
 	stop_moving();
-	osDelay(100);
+	osDelay(DELAY_STOP);
 	
 }
 
@@ -103,10 +104,9 @@ void right_stationary(uint32_t speed) {
 //TODO: fix up the speed values for right 90 degree
 void right90(uint32_t speed) {
 	right_stationary(speed);
-	osDelay(550);
+	osDelay(DELAY_RIGHT_TURN);
 	stop_moving();
-	osDelay(100);
-	
+	osDelay(DELAY_STOP);
 }
 
 void stop_moving() {
