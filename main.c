@@ -46,7 +46,7 @@ const osThreadAttr_t priorityAboveNormal1 = {
 
 osMessageQueueId_t motorMsg, buzzerMsg, frontLedMsg, rearLedMsg, completedBuzzerMsg, selfDrivingMsg;
 
-osEventFlagsId_t buzzer_flag, self_driving_flag, remote_flag, movement_flag;
+osEventFlagsId_t buzzerFlag, selfDrivingFlag, remoteFlag, movementFlag, stopFlag;
 
 osSemaphoreId_t buzzerSem, movementSem;
 
@@ -71,6 +71,10 @@ void InitRedLED() {
 }
 /*---------------------*/
 
+int isMoving() {
+	if (rx_data == CMD_
+}
+
 volatile uint32_t rx_data;
 
 void UART2_IRQHandler() {
@@ -78,33 +82,7 @@ void UART2_IRQHandler() {
 	NVIC_ClearPendingIRQ(UART2_IRQn);
 	
 	if (UART2->S1 & UART_S1_RDRF_MASK) {
-		rx_data = UART2->D;
-		
-		//For easy setting of event flags
-		switch(rx_data) {
-			case 0x01:
-			case 0x02:
-			case 0x03:
-			case 0x04:
-			case 0x05:
-			case 0x06:
-				osEventFlagsSet(movement_flag, 0x0001);
-				break;
-			case 0x07: //set flag for self driving mode
-				osEventFlagsSet(self_driving_flag, 0x0001);
-				osEventFlagsSet(remote_flag, 0x0000);
-				break;
-			case 0x08: //set flag for remote mode
-				osEventFlagsSet(self_driving_flag, 0x0000);
-				osEventFlagsSet(remote_flag, 0x0001);
-				break;
-			case 0x09:
-				osEventFlagsSet(buzzer_flag, 0x0001); //temporary means to switch the buzzer to completed tune
-				break;
-			default:
-				osEventFlagsSet(movement_flag, 0x0000);
-				break;
-		}
+		rx_data = UART2->D; //Handling is performed in control threads
 	}
 	
 	if (UART2->S1 & (UART_S1_OR_MASK | UART_S1_NF_MASK | UART_S1_FE_MASK | UART_S1_PF_MASK)) {
@@ -117,10 +95,8 @@ volatile int state = 0;
 volatile float distance;
 
 void app_self_driving(void *argument) {
-	uint32_t receivedData;
 	for (;;) {
-		osMessageQueueGet(selfDrivingMsg, &receivedData, NULL, osWaitForever);
-		osEventFlagsWait(self_driving_flag, 0x0001, osFlagsWaitAny, osWaitForever);
+		osEventFlagsWait(selfDrivingFlag, 0x0001, osFlagsWaitAny, osWaitForever);
 		//Reset counter
 		//start_time = 0;
 		//stop_time = 0;
@@ -199,252 +175,112 @@ void app_self_driving(void *argument) {
 			move(CMD_STOP, SD_SPEED);  
 			osDelay(DELAY_STOP);
 			break;
-			
-			/*switch (state) {
-				case 0: //Object Detection State
-					onRed(); //Object not yet detected
-					forwards(SD_SPEED);
-					if (distance < DISTANCE_THRESHOLD) {
-						offRed(); //for visual confirmation that it has been detected
-						stop_moving();
-						delay(DELAY_STOP);
-						state++; 
-					} 
-					break;
-				case 1: //Turn 45 degrees left
-					left45(SD_SPEED); 
-					delay(DELAY_LEFT_TURN);
-					state++;
-					break;
-				case 2: //Repeat 3 times
-				case 3:
-				case 4:
-					/*forwards(SD_SPEED); 
-					delay(DELAY_STRAIGHT);
-					stop_moving();
-					delay(DELAY_STOP);
-					right90(SD_SPEED);
-					delay(DELAY_RIGHT_TURN);
-					state++;
-					offRed();
-					stop_moving();
-					break;
-				case 5: //Last straight
-					forwards(SD_SPEED); 
-					delay(DELAY_STRAIGHT);
-					stop_moving();
-					delay(DELAY_STOP);
-					state++;
-					break;
-				case 6: //Turn 45 degrees left
-					left45(SD_SPEED);
-					delay(DELAY_LEFT_TURN);
-					state++;
-					break;
-				case 7: //State to return to the start. Similar to state 1
-					if (distance < DISTANCE_THRESHOLD) {
-						//for visual confirmation that it has been detected
-						offRed(); 
-						stop_moving();
-						//state = 0;
-						//Exit self-driving mode by itself
-						//osEventFlagsSet(self_driving_flag, 0x0000);
-						//osEventFlagsSet(remote_flag, 0x0001);
-					} else {
-						//Object not yet detected
-						onRed(); 
-						forwards(SD_SPEED); 
-					}
-					state++;
-					break;
-				default: 
-					//If somehow it reaches here, it forces it back to initial state
-					delay(0x80000);
-					state = 0;
-			}
-			//osDelay(20);
-		}*/
-
-
-		/*
-		switch (state) {
-			case 0: //Object Detection State
-				if (distance < DISTANCE_THRESHOLD) {
-					offRed(); //for visual confirmation that it has been detected
-					stop_moving();
-					state++; 
-				} else {
-					onRed(); //Object not yet detected
-					forwards(SD_SPEED); 
-				}
-				break;
-			case 1: //Turn 45 degrees left
-				left45(SD_SPEED); 
-				osDelay(DELAY_LEFT_TURN);
-				state++;
-				break;
-			case 2: //Repeat 3 times
-			case 3:
-			case 4:
-				forwards(SD_SPEED); 
-				osDelay(DELAY_STRAIGHT);
-				stop_moving();
-				osDelay(DELAY_STOP);
-				right90(SD_SPEED);
-				osDelay(DELAY_RIGHT_TURN);
-				state++;
-				break;
-			case 5: //Last straight
-				forwards(SD_SPEED); 
-				osDelay(DELAY_STRAIGHT);
-				stop_moving();
-				osDelay(DELAY_STOP);
-				state++;
-				break;
-			case 6: //Turn 45 degrees left
-				left45(SD_SPEED);
-				osDelay(DELAY_LEFT_TURN);
-				state++;
-			case 7: //State to return to the start. Similar to state 1
-				if (distance < DISTANCE_THRESHOLD) {
-					//for visual confirmation that it has been detected
-					offRed(); 
-					stop_moving();
-					state = 0;
-					//Exit self-driving mode by itself
-					osEventFlagsSet(self_driving_flag, 0x0000);
-					osEventFlagsSet(remote_flag, 0x0001);
-				} else {
-					//Object not yet detected
-					onRed(); 
-					forwards(SD_SPEED); 
-				}
-			default: 
-				//If somehow it reaches here, it forces it back to initial state
-				state = 0;
-				break;
 		}
-		*/
-	}
 	}
 }
 
-void app_control_rear_led(void* argument) {
-	uint32_t receivedData;
+
+
+
+/* LED THREADS */
+void app_running_front_led(void *argument) {
 	for (;;) {
-		osMessageQueueGet(rearLedMsg, &receivedData, NULL, osWaitForever);
-		switch (receivedData) {
-			case 0x01:
-			case 0x02:
-			case 0x03:
-			case 0x04:
-			case 0x07: //incl self-driving mode
-				rearLed500();
-				break;
-			default:
-				rearLed250();
-				break;
-		}
+		osEventFlagsWait(movementFlag, 0x0001, osFlagsWaitAny, osWaitForever);
+		runningFrontLED();
 	}
 }
 
-
-
-void app_control_front_led(void *argument) {
-	uint32_t receivedData;
+void app_on_front_led(void *argument) {
 	for (;;) {
-		osMessageQueueGet(frontLedMsg, &receivedData, NULL, osWaitForever);
-		switch (receivedData) {
-			case 0x01:
-			case 0x02:
-			case 0x03:
-			case 0x04:
-			case 0x05:
-			case 0x06:
-			case 0x07: //incl self-driving mode
-				runningFrontLED();
-				break;
-			default:
-				onAllLED();
-		}
+		osEventFlagsWait(movementFlag, 0x0000, osFlagsWaitAny, osWaitForever);
+		onAllLED();
 	}
 }
 
+void app_moving_rear_led(void* argument) {
+	for (;;) {
+		osEventFlagsWait(movementFlag, 0x0001, NULL, osWaitForever);
+		rearLed250();
+	}
+}
 
+void app_stop_rear_led(void *argument) {
+	for (;;) {
+		osEventFlagsWait(movementFlag, 0x0000, NULL, osWaitForever);
+		rearLed500();
+	}
+}
+
+/* MOTOR THREAD */
 void app_control_motor(void *argument) {
-	uint32_t receivedData;
 	for (;;) {
-		//osEventFlagsWait(movement_flag, 0x0001, osFlagsWaitAny, osWaitForever);
-		osMessageQueueGet(motorMsg, &receivedData, NULL, osWaitForever);
-		switch (receivedData) {
-			case 0x01:
-				forwards(FULL_SPEED);
+		osEventFlagsWait(movementFlag, 0x0001, osFlagsWaitAny, osWaitForever);
+		switch (rx_data) {
+			case CMD_FORWARD:
+				move(CMD_FORWARD, FULL_SPEED); //forwards(FULL_SPEED);
 				break;
-			case 0x02:
-				reverse(FULL_SPEED);
+			case CMD_REVERSE:
+				move(CMD_REVERSE, FULL_SPEED); //reverse(FULL_SPEED);
 				break;
-			case 0x03:
-				right(SLOW_SPEED);
+			case CMD_RIGHT:
+				move(CMD_RIGHT, SLOW_SPEED); //right(SLOW_SPEED);
 				break;
-			case 0x04:
-				left(SLOW_SPEED);
+			case CMD_LEFT:
+				move(CMD_LEFT, SLOW_SPEED); //left(SLOW_SPEED);
 				break;
-			case 0x05:
-				left45(SLOW_SPEED);
-				osDelay(DELAY_LEFT_TURN);
+			case CMD_LEFT45:
+				move(CMD_LEFT45, SLOW_SPEED); //left45(SLOW_SPEED);
 				break;
-			case 0x06:
-				right90(SLOW_SPEED);
-				osDelay(DELAY_RIGHT_TURN);
+			case CMD_RIGHT90:
+				move(CMD_RIGHT90, SLOW_SPEED); //right90(SLOW_SPEED);
 				break;
 			default:
 				stop_moving();
-				break;
 		}
 	}
 }
 
+/* BUZZER THREAD */
 void app_control_buzzer(void *argument) {
-	uint32_t receivedData;
 	for (;;) {
-		osMessageQueueGet(buzzerMsg, &receivedData, NULL, osWaitForever);
-		switch (receivedData) {
-			case 0x01:
-			case 0x02:
-			case 0x03:
-			case 0x04:
-				playSong(); //Play tune while moving, where 1-4 are movement commands
-				break;
-			case 0x09: // When the robot finishes moving
-				playCompletedSong();
-			default:
-				break; //Do nothing if not moving
-		}
+		osEventFlagsWait(movementFlag, 0x0001, osFlagsWaitAny, osWaitForever);
+		osEventFlagsWait(buzzerFlag, 0x0000, osFlagsWaitAny, osWaitForever);
+		playSong(); //Play tune while moving defined in the control_threads
 	}
 }
 
 void app_control_completed_buzzer(void *argument) {
-	uint32_t receivedData;
 	for (;;) {
-		osMessageQueueGet(completedBuzzerMsg, &receivedData, NULL, osWaitForever);
-		osEventFlagsWait(buzzer_flag, 0x0001, osFlagsWaitAny, osWaitForever);
+		osEventFlagsWait(buzzerFlag, 0x0001, osFlagsWaitAny, osWaitForever);
 		playCompletedSong();
 	}
 }
 
-void control_threads(void *argument) {
-	uint32_t currCmd;
-	while (1) {
-		currCmd = rx_data; 
-		osMessageQueuePut(selfDrivingMsg, &currCmd, 2U, 0);
-		//osMessageQueuePut(completedBuzzerMsg, &currCmd, 1U, 0); //should compete for semaphore and buzzerMsg will not be able to obtain semaphore
-		osMessageQueuePut(buzzerMsg, &currCmd, 0U, 0);
-		osMessageQueuePut(motorMsg, &currCmd, 1U, 0); //To update with priorities
-		osMessageQueuePut(frontLedMsg, &currCmd, 0U, 0);
-		osMessageQueuePut(rearLedMsg, &currCmd, 0U, 0);
+/* BRAIN THREAD */ 
+void app_control_threads(void *argument) {
+	for (;;) {
+		switch(rx_data) {
+			case CMD_FORWARD:
+			case CMD_REVERSE:
+			case CMD_LEFT:
+			case CMD_RIGHT:
+			case CMD_LEFT45:
+			case CMD_RIGHT90:
+			case CMD_SELF_DRIVING:
+				osEventFlagsSet(movementFlag, 0x0001);
+			case CMD_STOP:
+				osEventFlagsSet(movementFlag, 0x0000); //Not sure if this is necessary
+				break;
+			case CMD_BUZZER:
+				osEventFlagsSet(buzzerFlag, 0x0001);
+				break;
+			default:
+				osEventFlagsSet(movementFlag, 0x0000);
+				stop_moving();
+				break;
+		}
 	}
 }
-
 
 static void delay(volatile uint32_t nof) {
   while(nof!=0) {
@@ -453,39 +289,10 @@ static void delay(volatile uint32_t nof) {
   }
 }
 
-
-
-int main() {
-	SystemCoreClockUpdate();
-	
-	
-	InitUART2(BAUD_RATE);
-	
-	InitPWMMotors();
-	InitPWMBuzzer();
-
-	InitGPIOBuzzer();
-	InitGPIOMotors();
-	InitGPIOLed();
-	
-	InitUltra();
-	
-	//Init flags for some threads
-	buzzer_flag = osEventFlagsNew(NULL);
-	self_driving_flag = osEventFlagsNew(NULL);
-	remote_flag = osEventFlagsNew(NULL);
-	movement_flag = osEventFlagsNew(NULL); 
-	
-	//Default to remote mode
-	osEventFlagsSet(remote_flag, 0x0001); 
-	
-	//Red LED for debugging purposes
-	InitRedLED();
-	
-	rx_data = 0;
-	//forwards(SLOW_SPEED);
-
-	/*
+/*
+Temporary Test Function for Ultrasonic
+*/
+void testUltrasonic() {
 	while (1) {
 		//Reset counter
 		//start_time = 0;
@@ -507,30 +314,65 @@ int main() {
 		}
 		int i = 0;
 	}
-	*/
+}
 
+
+
+int main() {
+	SystemCoreClockUpdate();
+	
+	
+	InitUART2(BAUD_RATE);
+	
+	InitPWMMotors();
+	InitPWMBuzzer();
+
+	InitGPIOBuzzer();
+	InitGPIOMotors();
+	InitGPIOLed();
+	
+	InitUltra();
+	
+	//Init flags for some threads
+	buzzerFlag = osEventFlagsNew(NULL);
+	selfDrivingFlag = osEventFlagsNew(NULL);
+	remoteFlag = osEventFlagsNew(NULL);
+	movementFlag = osEventFlagsNew(NULL); 
+	//stopFlag = osEventFlagsNew(NULL);
+	
+	//Default to remote mode
+	osEventFlagsSet(remoteFlag, 0x0001); 
+	
+	//Red LED for debugging purposes
+	InitRedLED();
+	
+	rx_data = 0;
 	
 	osKernelInitialize();
 	
 	buzzerSem = osSemaphoreNew(1, 1, NULL); //1 available so can start tune immediately
-	movementSem = osSemaphoreNew(1, 1, NULL);
+	movementSem = osSemaphoreNew(1, 1, NULL); //Not sure about this implementation
 	
-	osThreadNew(control_threads, NULL, NULL); //Initialize the main thread that controls packets
-	osThreadNew(app_control_front_led, NULL, NULL);
-	osThreadNew(app_control_rear_led, NULL, NULL);
+	osThreadNew(app_control_threads, NULL, NULL); //Initialize the main thread that controls packets
+	osThreadNew(app_running_front_led, NULL, NULL);
+	osThreadNew(app_on_front_led, NULL, NULL);
+	osThreadNew(app_stop_rear_led, NULL, NULL);
+	osThreadNew(app_moving_rear_led, NULL, NULL);
 	osThreadNew(app_control_buzzer, NULL, NULL);
 	osThreadNew(app_control_motor, NULL, NULL);
 	osThreadNew(app_control_completed_buzzer, NULL, NULL);
 	osThreadNew(app_self_driving, NULL, &priorityAboveNormal); //should put it to a higher priority actually...
 	
 	//Init motor, buzzer and led msgs. Using rx_data instead of myDataPkt as we are not using structures.
+	/*
 	motorMsg = osMessageQueueNew(QUEUE_MSG_COUNT, sizeof(rx_data) , NULL);
 	buzzerMsg = osMessageQueueNew(QUEUE_MSG_COUNT, sizeof(rx_data), NULL);
 	completedBuzzerMsg = osMessageQueueNew(QUEUE_MSG_COUNT, sizeof(rx_data), NULL);
 	frontLedMsg = osMessageQueueNew(QUEUE_MSG_COUNT, sizeof(rx_data), NULL);
 	rearLedMsg = osMessageQueueNew(QUEUE_MSG_COUNT, sizeof(rx_data), NULL);
 	selfDrivingMsg = osMessageQueueNew(QUEUE_MSG_COUNT, sizeof(rx_data), NULL);
-
+	*/
+	
 	osKernelStart();
 	
 	for (;;) { 
