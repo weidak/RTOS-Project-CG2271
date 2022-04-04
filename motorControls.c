@@ -100,6 +100,40 @@ void stop_moving() {
 	REV_RIGHT_WHEELS = 0;
 }
 
+void move(uint32_t cmd, uint32_t speed) {
+	osSemaphoreAcquire(movementSem, osWaitForever);
+	switch (cmd){
+		case 0x01:
+			forwards(speed);
+			break;
+		case 0x02:
+			reverse(speed);
+			break;
+		case 0x03:
+			right(speed);
+			break;
+		case 0x04:
+			left(speed);
+			break;
+		case 0x05:
+			left45(speed);
+			break;
+		case 0x06:
+			right90(speed);
+			break;
+		case 0x07:
+			//self-driving
+			break;
+		case 0x08:
+			stop_moving();
+			break;
+		default:
+			//play buzzer
+			break;
+	}
+	osSemaphoreRelease(movementSem);
+}
+
 static void delay(volatile uint32_t nof) {
   while(nof!=0) {
     __asm("NOP");

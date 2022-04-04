@@ -4,6 +4,8 @@
 #define RXD2 16
 #define TXD2 17
 
+uint8_t dataToSend;
+
 // Replace with your network credentials
 const char* ssid = "iPhone";
 const char* password = "weidak123";
@@ -81,7 +83,7 @@ void loop() {
   if (!client) {
     return;
   }
-   
+  
   Serial.print("New client: ");
   Serial.println(client.remoteIP());
    
@@ -93,46 +95,59 @@ void loop() {
   String req = client.readStringUntil('\r');
   Serial.println(req);
 
+  dataToSend = 0x00;
+
   // Make the client's request.
   if(req.indexOf("status") != -1)
   {
     response = "WiFi Connected: " + ip_address;
-  }
+  } else
   if(req.indexOf("/FORWARD") != -1)
   {
     digitalWrite(output26, HIGH);
-    response = "RED LED ON";
-    Serial2.write(0x31);
-  }
+    //Delegate forward movements to 0x01
+    dataToSend = 0x01;
+    Serial2.write(dataToSend);
+  } else 
   if(req.indexOf("/BACKWARD") != -1)
   {
-    digitalWrite(output26, LOW);
-    response = "RED LED OFF";
-    Serial2.write(0x32);
-  }  
+    //Delegate backwards movements to 0x02 
+    dataToSend = 0x02;
+    Serial2.write(dataToSend);
+  } else  
   if(req.indexOf("/RIGHT") != -1)
   {
-    digitalWrite(output26, HIGH);
-    response = "GREEN LED ON";
-    Serial2.write(0x34);
-  }
+    //Delegate turning right to 0x03
+    dataToSend = 0x03;
+    Serial2.write(dataToSend);
+  } else
   if(req.indexOf("/LEFT") != -1)
   {
-    digitalWrite(output26, LOW);
-    response = "GREEN LED OFF";
-    Serial2.write(0x33);
-  }
-  if(req.indexOf("onBlue") != -1)
+    //Delegate turning left to 0x04
+    dataToSend = 0x04;
+    Serial2.write(dataToSend);
+  } else 
+  if(req.indexOf("/TURN_LEFT") != -1)
   {
-    digitalWrite(output26, HIGH);
-    response = "BLUE LED ON";
-    Serial2.write(0x35);
-  }
-  if(req.indexOf("offBlue") != -1)
+    dataToSend = 0x05;
+    Serial2.write(dataToSend);
+  } else 
+  if(req.indexOf("/TURN_RIGHT") != -1)
   {
-    //digitalWrite(output26, LOW);
-    response = "BLUE LED OFF";
-    Serial2.write(0x34);
+    Serial2.write(0x06);
+  } else
+  if(req.indexOf("/SELF_DRIVE_MODE") != -1)
+  {
+    Serial2.write(0x07);
+  } else
+  if(req.indexOf("/REMOTE_MODE") != -1)
+  {
+    Serial2.write(0x08);
+  } else if (req.indexOf("/PLAY_BUZZER") != -1 ) {
+    Serial2.write(0x09);
+  }
+  else {
+    Serial2.write(0x00);
   }
   /*
        if (req.indexOf("on12") != -1) {digitalWrite(LED12, HIGH); estado = "LED12 ON";}

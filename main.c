@@ -12,6 +12,16 @@
 
 #define QUEUE_MSG_COUNT 1
 
+#define CMD_FORWARD 0x01
+#define CMD_REVERSE 0x02
+#define CMD_RIGHT 0x03
+#define CMD_LEFT 0x04
+#define CMD_LEFT45 0x05
+#define CMD_RIGHT90 0x06
+#define CMD_SELF_DRIVING 0x07
+#define CMD_STOP 0x08
+#define CMD_BUZZER 0x09
+
 //To delete if not used in the end.
 //Can be useful if Arduino can send packets, but need to parse 32uint data
 /*
@@ -26,11 +36,19 @@ const osThreadAttr_t priorityAboveNormal = {
   .priority = osPriorityAboveNormal
 };
 
+const osThreadAttr_t priorityAboveNormal2 = {
+	.priority = osPriorityAboveNormal2
+};
+
+const osThreadAttr_t priorityAboveNormal1 = {
+	.priority = osPriorityAboveNormal1
+};
+
 osMessageQueueId_t motorMsg, buzzerMsg, frontLedMsg, rearLedMsg, completedBuzzerMsg, selfDrivingMsg;
 
 osEventFlagsId_t buzzer_flag, self_driving_flag, remote_flag, movement_flag;
 
-osSemaphoreId_t buzzerSem;
+osSemaphoreId_t buzzerSem, movementSem;
 
 /*---------------------
 FOR DEBUGGING PURPOSES
@@ -130,58 +148,57 @@ void app_self_driving(void *argument) {
 			while (distance >= DISTANCE_THRESHOLD) {
 					offRed();
 					distance = getDistance();
-					forwards(SD_SPEED);
-				}
-				onRed();
-				stop_moving();
-				delay(DELAY_STOP);
-				
-				left45(SD_SPEED); 
-				delay(DELAY_LEFT_TURN);
-				
-				forwards(SD_SPEED); 
-				delay(DELAY_STRAIGHT);
-				stop_moving();
-				delay(DELAY_STOP);
-				right90(SD_SPEED);
-				delay(DELAY_RIGHT_TURN);
-				
-				forwards(SD_SPEED); 
-				delay(DELAY_STRAIGHT);
-				stop_moving();
-				delay(DELAY_STOP);
-				right90(SD_SPEED);
-				delay(DELAY_RIGHT_TURN);
-				
-				forwards(SD_SPEED); 
-				delay(DELAY_STRAIGHT);
-				stop_moving();
-				delay(DELAY_STOP);
-				right90(SD_SPEED);
-				delay(DELAY_RIGHT_TURN);
-				
-				forwards(SD_SPEED); 
-				delay(DELAY_STRAIGHT);
-				stop_moving();
-				delay(DELAY_STOP);
-						
-				left45(SD_SPEED);
-				delay(DELAY_LEFT_TURN);
+					move(CMD_FORWARD, SD_SPEED); 
+			}
+			onRed();
+			move(CMD_STOP, SD_SPEED); 
+			osDelay(DELAY_STOP);
+			move(CMD_LEFT45, SD_SPEED);   //45 degree 
+			osDelay(DELAY_LEFT_TURN);
+
+			move(CMD_FORWARD, SD_SPEED); 
+			osDelay(DELAY_STRAIGHT);
+			move(CMD_STOP, SD_SPEED);   
+			osDelay(DELAY_STOP);
+			move(CMD_RIGHT90, SD_SPEED); //90 degree
+			osDelay(DELAY_RIGHT_TURN);
+			
+			move(CMD_FORWARD, SD_SPEED);  
+			osDelay(DELAY_STRAIGHT);
+			move(CMD_STOP, SD_SPEED);  
+			osDelay(DELAY_STOP);
+			move(CMD_RIGHT90, SD_SPEED); //90 degree
+			osDelay(DELAY_RIGHT_TURN);
+			
+			move(CMD_FORWARD, SD_SPEED); 
+			osDelay(DELAY_STRAIGHT);
+			move(CMD_STOP, SD_SPEED);  
+			osDelay(DELAY_STOP);
+			move(CMD_RIGHT90, SD_SPEED);  //90 degree
+			osDelay(DELAY_RIGHT_TURN);
+			
+			move(CMD_FORWARD, SD_SPEED); 
+			osDelay(DELAY_STRAIGHT);
+			move(CMD_STOP, SD_SPEED);  
+			osDelay(DELAY_STOP);
+					
+			move(CMD_LEFT45, SD_SPEED);  //45 degree
+			osDelay(DELAY_LEFT_TURN);
 		
-				offRed();
-				delay(DELAY_STOP);
-				
+			offRed();
+			osDelay(DELAY_STOP);
+			
+			distance = getDistance();
+			while (distance >= DISTANCE_THRESHOLD) {
+				onRed();
 				distance = getDistance();
-				while (distance >= DISTANCE_THRESHOLD) {
-					onRed();
-					distance = getDistance();
-					float dist = distance;
-					forwards(SD_SPEED);
-				}
-				offRed();
-				stop_moving();
-				delay(DELAY_STOP);
-				break;
+				float dist = distance;
+				move(CMD_FORWARD, SD_SPEED);  
+			}
+			offRed();
+			move(CMD_STOP, SD_SPEED);  
+			osDelay(DELAY_STOP);
+			break;
 			
 			/*switch (state) {
 				case 0: //Object Detection State
@@ -496,6 +513,7 @@ int main() {
 	osKernelInitialize();
 	
 	buzzerSem = osSemaphoreNew(1, 1, NULL); //1 available so can start tune immediately
+	movementSem = osSemaphoreNew(1, 1, NULL);
 	
 	osThreadNew(control_threads, NULL, NULL); //Initialize the main thread that controls packets
 	osThreadNew(app_control_front_led, NULL, NULL);

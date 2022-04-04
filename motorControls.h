@@ -1,4 +1,6 @@
 #include "MKL25Z4.h"                    // Device header
+#include "cmsis_os2.h"                  // ::CMSIS:RTOS2
+#include "RTE_Components.h"             // Component selection
 
 #ifndef MOTORCONTROLS_H_
 #define MOTORCONTROLS_H_
@@ -21,6 +23,8 @@
 
 #define MASK(x) (1UL << x)
 
+extern osSemaphoreId_t movementSem;
+
 /*
 Initialisation of PWM
 */
@@ -37,6 +41,7 @@ Movement Controls
 void forwards(uint32_t speed);
 void reverse(uint32_t speed);
 void stop_moving();
+void move(uint32_t cmd, uint32_t speed);
 
 void left(uint32_t speed);
 
