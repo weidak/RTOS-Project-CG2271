@@ -130,12 +130,14 @@ void UART2_IRQHandler() {
 
 volatile int state = 0;
 //volatile float distance;
+volatile uint32_t buzzerStatus = 0x00;
 
 void app_self_driving(void *argument) {
 	//uint32_t receivedData;
 	for (;;) {
 		//osMessageQueueGet(selfDrivingMsg, &receivedData, NULL, osWaitForever);
 		osEventFlagsWait(self_driving_flag, 0x0001, osFlagsWaitAny, osWaitForever);
+		osSemaphoreRelease(buzzerSem);
 		//uint32_t selfDriving = 0x07;
 		//osMessageQueuePut(buzzerMsg, &selfDriving, 0U, 0);
 		float distance = DISTANCE_THRESHOLD;
@@ -203,7 +205,7 @@ void app_self_driving(void *argument) {
 		stop_moving();
 		osDelay(DELAY_STOP);
 		rx_data = 0x00; //Force rx_data to change back to 0
-		osEventFlagsSet(buzzer_flag, 0x0001); //temporary means to switch the buzzer to completed tune
+		buzzerStatus = 1;
 	}
 }
 
@@ -244,10 +246,10 @@ void app_control_motor(void *argument) {
 				reverse(FULL_SPEED); // right90(FULL_SPEED); //
 				break;
 			case CMD_RIGHT:
-				right(HALF_SPEED);
+				right(MEDIUM_SPEED);
 				break;
 			case CMD_LEFT:
-				left(HALF_SPEED);
+				left(MEDIUM_SPEED);
 				break;
 			case CMD_LEFT_STATIONARY:
 				left_stationary(FULL_SPEED);
@@ -266,21 +268,48 @@ void app_control_motor(void *argument) {
 	}
 }
 
+char coffins[] = "g gDC l a aaC lag gLALALg gLALALg gDC l a aaC lag gLALALg gLALALllllDDDDCCCCFFFFGGGGGGGGGGGGClaf";
+int coffinBeats[] = {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1};
+int coffinSongLength = 95;
+int coffinTempo = 150;
+
+int coffin_frequency(char note) {
+	char names[] = {'f', 'g', 'a', 'l', 'C', 'D', 'E', 'F', 'G', 'A', 'L'};
+	int frequencies[] = {175, 196, 220, 233, 262, 294, 330, 349, 392, 440, 466};
+		for (int i = 0; i < sizeof(frequencies)/sizeof(frequencies[0]); i++) {
+			if (names[i] == note) return (frequencies[i]);
+		}
+		return 0;
+}
+	
+	
+void playCoffin() {
+		buzzerStatus = 0;
+		for (int i = 0; i <= coffinSongLength; i++) {
+			osSemaphoreAcquire(buzzerSem, osWaitForever);
+			TPM0->MOD = FREQ2MOD(coffin_frequency(coffins[i])); //need a function that converts freq to mod value
+			TPM0_C2V = (FREQ2MOD(coffin_frequency(coffins[i])))/5; //20% Duty Cycle
+			osSemaphoreRelease(buzzerSem);
+			osDelay(coffinBeats[i] * coffinTempo);			//delay_mult100(beats[i] * tempo);
+			if (i == coffinSongLength) {
+				i = 0;
+			} 
+			if (buzzerStatus == 1) {
+				playSong();
+				break;
+			}
+		}
+		osSemaphoreRelease(buzzerSem);
+}
+
 void app_control_buzzer(void *argument) {
 	uint32_t receivedData;
 	for (;;) {
 		osMessageQueueGet(buzzerMsg, &receivedData, NULL, osWaitForever);
 		if (receivedData == 0x00) {
-			playSong();
+			//playSong();
+			playCoffin();
 		}
-	}
-}
-
-
-void app_control_completed_buzzer(void *argument) {
-	for (;;) {
-		osEventFlagsWait(buzzer_flag, 0x0001, osFlagsWaitAny, osWaitForever);
-		playCoffin();
 	}
 }
 
@@ -300,8 +329,6 @@ uint32_t checkMove(uint32_t cmd) {
 	}
 }
 
-volatile uint32_t buzzerStatus = 0x00;
-
 void checkBuzzer(uint32_t cmd) {
 	if (cmd == 0x09) {
 		buzzerStatus = 0x01;
@@ -318,7 +345,6 @@ void control_threads(void *argument) {
 		//osMessageQueuePut(selfDrivingMsg, &currCmd, 2U, 0);
 		osMessageQueuePut(buzzerMsg, &currCmd, 0U, 0);
 		osMessageQueuePut(motorMsg, &currCmd, 1U, 0); //To update with priorities
-		osMessageQueuePut(completedBuzzerMsg, &buzzerStatus, 1U, 0); //should compete for semaphore and buzzerMsg will not be able to obtain semaphore
 		osMessageQueuePut(frontLedMsg, &ledStatus, 0U, 0);
 	}
 }
@@ -335,7 +361,6 @@ static void delay(volatile uint32_t nof) {
 
 int main() {
 	SystemCoreClockUpdate();
-	
 	
 	InitUART2(BAUD_RATE);
 	
@@ -398,13 +423,11 @@ int main() {
 	osThreadNew(app_control_rear_led, NULL, NULL);
 	osThreadNew(app_control_buzzer, NULL, NULL);
 	osThreadNew(app_control_motor, NULL, NULL);
-	//osThreadNew(app_control_completed_buzzer, NULL, NULL);
 	osThreadNew(app_self_driving, NULL, &priorityAboveNormal); //should put it to a higher priority actually...
 	
 	//Init motor, buzzer and led msgs. Using rx_data instead of myDataPkt as we are not using structures.
 	motorMsg = osMessageQueueNew(QUEUE_MSG_COUNT, sizeof(rx_data) , NULL);
 	buzzerMsg = osMessageQueueNew(QUEUE_MSG_COUNT, sizeof(rx_data), NULL);
-	completedBuzzerMsg = osMessageQueueNew(QUEUE_MSG_COUNT, sizeof(rx_data), NULL);
 	frontLedMsg = osMessageQueueNew(QUEUE_MSG_COUNT, sizeof(rx_data), NULL);
 	rearLedMsg = osMessageQueueNew(QUEUE_MSG_COUNT, sizeof(rx_data), NULL);
 	selfDrivingMsg = osMessageQueueNew(QUEUE_MSG_COUNT, sizeof(rx_data), NULL);

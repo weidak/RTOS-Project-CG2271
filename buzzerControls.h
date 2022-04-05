@@ -5,6 +5,10 @@
 #ifndef BUZZERCONTROLS_H_
 #define BUZZERCONTROLS_H_
 
+#define MASK(x) (1<<(x))
+#define PTA5_Pin 5
+#define FREQ2MOD(x) 375000/x
+
 extern osSemaphoreId_t buzzerSem;
 
 /*
@@ -18,8 +22,6 @@ TODO: Initialisation of GPIO for PORTD for buzzer and TPM Modes
 void InitGPIOBuzzer();
 void playSong();
 void playCompletedSong();
-void playCoffin();
-
 void playCoffin();
 
 #endif
