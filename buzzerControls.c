@@ -7,6 +7,11 @@
 int num_notes = 7;
 int musical_notes[] = {262,294,330,349,392,440,494};
 
+char coffins[] = "g gD C l a aa C l a g gL AL AL g gL AL AL g gD C l a aa C l a g gL AL AL g gL AL AL ll ll DD DD CC CC FF FF GG GG GG GG GG GG Cl af g";
+int coffinBeats[] = {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1};
+int coffinSongLength = sizeof(coffins);
+int coffinTempo = 150;
+	
 char notes[] = "EE E CE G g C g e a h bagEG AFG E CDh C g e a h bagEG AFG E CDh  GJFS E taC aCD GJFS E V VV  GJFS E taC aCD U D C  GJFS E taC aCD GJFS E V VV  GJFS E taC aCD U D C ";
 int beats[] = {1,1,1,1,1,1,1,1,2,2,2,2,2,1,1,2,2,1,1,1,1,1,1,2,1,1,1,1,2,1,1,1,1,1,1,1,1,2,2,1,1,2,2,1,1,1,1,1,1,2,1,1,1,1,2,1,1,1,1,1,1,1,1,2,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,2,2,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,2,1,1,2,2,6,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,2,2,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,2,1,1,2,2,6};
 int songLength = sizeof(notes);
@@ -62,6 +67,27 @@ int frequency(char note) {
     if (names[i] == note) return(frequencies[i]);  
   }
   return 0;  
+}
+
+int coffin_frequency(char note) {
+	char names[] = {'f', 'g', 'a', 'l', 'C', 'D', 'E', 'F', 'G', 'A', 'L'};
+	int frequencies[] = {175, 196, 220, 233, 262, 294, 330, 349, 392, 440, 466};
+		for (int i = 0; i < sizeof(frequencies); i++) {
+			if (names[i] == note) return (frequencies[i]);
+		}
+		return 0;
+}
+
+void playCoffin() {
+	while (1) {
+		for (int i = 0; i < coffinSongLength; i++) {
+			osSemaphoreAcquire(buzzerSem, osWaitForever);
+			TPM0->MOD = FREQ2MOD(coffin_frequency(notes[i])); //need a function that converts freq to mod value
+			TPM0_C2V = (FREQ2MOD(coffin_frequency(notes[i])))/5; //20% Duty Cycle
+			osSemaphoreRelease(buzzerSem);
+			osDelay(coffinBeats[i] * coffinTempo); //delay_mult100(beats[i] * tempo);
+		}
+	}
 }
 
 void playSong() {

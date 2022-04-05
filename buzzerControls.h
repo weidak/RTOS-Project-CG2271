@@ -19,4 +19,6 @@ void InitGPIOBuzzer();
 void playSong();
 void playCompletedSong();
 
+void playCoffin();
+
 #endif
