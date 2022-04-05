@@ -18,6 +18,7 @@ TODO: Initialisation of GPIO for PORTD for buzzer and TPM Modes
 void InitGPIOBuzzer();
 void playSong();
 void playCompletedSong();
+void playCoffin();
 
 void playCoffin();
 
