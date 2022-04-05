@@ -1,5 +1,4 @@
 #include "RTE_Components.h"
-//#include  CMSIS_device_header
 #include "cmsis_os2.h"
 #include "MKL25Z4.h"                    // Device header
 #include "buzzerControls.h"
@@ -19,15 +18,6 @@
 #define CMD_SELF_DRIVING 0x07
 #define CMD_STOP 0x08
 #define CMD_BUZZER 0x09
-
-//To delete if not used in the end.
-//Can be useful if Arduino can send packets, but need to parse 32uint data
-/*
-typedef struct {
-	uint8_t cmd;
-	uint8_t data;
-} myDataPkt;
-*/
 
 //Initialize the msgs that control various threads.
 const osThreadAttr_t priorityAboveNormal = {
@@ -93,33 +83,6 @@ void UART2_IRQHandler() {
 		if (rx_data == CMD_SELF_DRIVING) osEventFlagsSet(self_driving_flag, 0x0001);
 		if (rx_data == CMD_STOP) osEventFlagsSet(self_driving_flag, 0x0000);
 		if (rx_data == CMD_BUZZER) osEventFlagsSet(buzzer_flag, 0x0001);
-		
-		/*
-		//For easy setting of event flags
-		switch(rx_data) {
-			case 0x01:
-			case 0x02:
-			case 0x03:
-			case 0x04:
-			case 0x05:
-			case 0x06:
-				osEventFlagsSet(movement_flag, 0x0001);
-				break;
-			case 0x07: //set flag for self driving mode
-				osEventFlagsSet(self_driving_flag, 0x0001);
-				osEventFlagsSet(remote_flag, 0x0000);
-				break;
-			case 0x08: //set flag for remote mode
-				osEventFlagsSet(self_driving_flag, 0x0000);
-				osEventFlagsSet(remote_flag, 0x0001);
-				break;
-			case 0x09:
-				osEventFlagsSet(buzzer_flag, 0x0001); //temporary means to switch the buzzer to completed tune
-				break;
-			default:
-				osEventFlagsSet(movement_flag, 0x0000);
-				break;
-		}*/
 	}
 	
 	if (UART2->S1 & (UART_S1_OR_MASK | UART_S1_NF_MASK | UART_S1_FE_MASK | UART_S1_PF_MASK)) {
