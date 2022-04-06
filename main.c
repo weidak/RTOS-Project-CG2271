@@ -38,6 +38,7 @@ osEventFlagsId_t buzzer_flag, self_driving_flag, remote_flag, movement_flag;
 
 osSemaphoreId_t buzzerSem, movementSem;
 
+osThreadId_t self_driving_Id;
 
 /*---------------------
 FOR DEBUGGING PURPOSES
@@ -83,7 +84,9 @@ void UART2_IRQHandler() {
 	if (UART2->S1 & UART_S1_RDRF_MASK) {
 		rx_data = UART2->D;
 		if (rx_data == CMD_SELF_DRIVING) {
-			//osEventFlagsSet(self_driving_flag, 0x0001);
+			osEventFlagsSet(self_driving_flag, 0x0001);
+			osEventFlagsSet(remote_flag, 0x0001);
+			osThreadFlagsSet(self_driving_Id, 0x0001);
 			osMessageQueuePut(selfDrivingMsg, &currCmd, NULL, NULL);
 		}
 		//if (rx_data == CMD_STOP) osEventFlagsSet(self_driving_flag, 0x0000);
@@ -96,7 +99,7 @@ void UART2_IRQHandler() {
 	}
 }
 
-volatile int distance = 0;
+volatile float distance = 0;
 
 /*
 void TPM2_IRQHandler() {
@@ -129,9 +132,9 @@ void app_ultrasonic(void *argument) {
 void app_self_driving(void *argument) {
 	uint32_t receivedData;
 	for (;;) {
-		osMessageQueueGet(selfDrivingMsg, &receivedData, NULL, osWaitForever);
-		osEventFlagsWait(self_driving_flag, 0x0001, osFlagsWaitAny, osWaitForever);
+		osThreadFlagsWait(0x0001, osFlagsWaitAny, osWaitForever);
 		osSemaphoreRelease(buzzerSem);
+		uint32_t rx = rx_data;
 		TPM2_SC &= ~TPM_SC_CMOD_MASK;
 		TPM2_C0SC |= TPM_CnSC_CHIE_MASK | TPM_CnSC_ELSA(1) | TPM_CnSC_ELSB(1);
 		TPM2_CNT = 0;
@@ -140,7 +143,7 @@ void app_self_driving(void *argument) {
 		
 		//uint32_t selfDriving = 0x07;
 		//osMessageQueuePut(buzzerMsg, &selfDriving, 0U, 0);
-		//while (1) {
+		while (1) {
 			//Enable interrupts for PIT and TPM0
 			
 			distance = getDistance();
@@ -159,8 +162,6 @@ void app_self_driving(void *argument) {
 					}
 					break;
 				case 2:
-				case 6:
-					onRed();
 					stop_moving();
 					osDelay(DELAY_STOP);
 					left45(SD_SPEED); // move(CMD_STOP, SD_SPEED); //
@@ -176,6 +177,14 @@ void app_self_driving(void *argument) {
 					right90(SD_SPEED); //move(CMD_RIGHT90, SD_SPEED); //90 degree
 					state++;
 					break;
+				case 6:
+					forwards(SD_SPEED);
+					osDelay(DELAY_STRAIGHT);
+					stop_moving();
+					osDelay(DELAY_STOP);
+					left45(SD_SPEED); // move(CMD_STOP, SD_SPEED); //
+					state++;
+					break;
 				default:
 					stop_moving();
 					osDelay(DELAY_STOP);
@@ -187,7 +196,7 @@ void app_self_driving(void *argument) {
 			int state_case = state;
 			float dist = distance;
 			int i = 0;
-		//}
+		}
 		/*
 		while (distance >= DISTANCE_THRESHOLD) {
 				offRed();
@@ -423,8 +432,8 @@ int main() {
 	
 	//Init flags for some threads
 	//buzzer_flag = osEventFlagsNew(NULL);
-	//self_driving_flag = osEventFlagsNew(NULL);
-	//remote_flag = osEventFlagsNew(NULL);
+	self_driving_flag = osEventFlagsNew(NULL);
+	remote_flag = osEventFlagsNew(NULL);
 	//movement_flag = osEventFlagsNew(NULL); 
 	
 	//Default to remote mode
@@ -436,7 +445,7 @@ int main() {
 	rx_data = 0;
 	//forwards(SLOW_SPEED);
 
-	
+	/*
 	while (1) {
 		//Reset counter
 		//stop_time = 0;
@@ -455,7 +464,7 @@ int main() {
 		}
 		int i = 0;
 	}
-	
+	*/
 
 	
 	osKernelInitialize();
@@ -468,7 +477,7 @@ int main() {
 	osThreadNew(app_control_rear_led, NULL, NULL);
 	osThreadNew(app_control_buzzer, NULL, NULL);
 	osThreadNew(app_control_motor, NULL, NULL);
-	osThreadNew(app_self_driving, NULL, NULL); //should put it to a higher priority actually...
+	self_driving_Id = osThreadNew(app_self_driving, NULL, NULL); //should put it to a higher priority actually...
   //osThreadNew(app_ultrasonic, NULL, NULL);
 	
 	

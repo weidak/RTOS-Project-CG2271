@@ -79,28 +79,35 @@ static void delay(volatile uint32_t nof) {
 //	TPM0_C4SC |= TPM_CnSC_CHF_MASK;
 //}
 
+volatile uint32_t start_time = 0;
 volatile uint32_t stop_time = 0;
 volatile int flagRising = 0;
-
+volatile int counter = 0;
 void TPM2_IRQHandler() {
-	if (flagRising){
-		flagRising = 0;
+	if (counter == 0){
 		TPM2_CNT = 0;
 	}
 	else {
 		stop_time = TPM2_C0V;
 		TPM2_C0SC &= ~TPM_CnSC_CHIE_MASK; //disable TPM2 interrupt
 	}
+	counter = 1 - counter;
 	//Clear Flag
 	TPM2_STATUS |= TPM_STATUS_CH0F_MASK;
 }
 
 float getDistance() {
+	flagRising = 0;
+	stop_time = 0;
+	TPM2_C0SC |= TPM_CnSC_CHIE_MASK;
 	PTE->PDOR |= MASK(TRIGGER_PIN);
 	delay(0x40);
 	PTE->PDOR &= ~MASK(TRIGGER_PIN);
-	flagRising = 1;
 	while (stop_time == 0);
+	uint32_t start = start_time;
+	uint32_t stop = stop_time;
+//	flagRising = 1;
+//	while (stop_time == 0);
 	float time = ((float)(stop_time)) / 375000.0;
   float distance = AIR_SPEED * time / 2; 
 	int i = 0;
