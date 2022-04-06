@@ -6,7 +6,7 @@
 #define BUZZERCONTROLS_H_
 
 #define MASK(x) (1<<(x))
-#define PTA5_Pin 5
+#define BUZZER_PIN 0 //PORT B PIN 0 for TPM1_C0V
 #define FREQ2MOD(x) 375000/x
 
 extern osSemaphoreId_t buzzerSem;

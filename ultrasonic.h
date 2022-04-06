@@ -6,8 +6,8 @@
 #ifndef ULTRASONIC_H_
 #define ULTRASONIC_H_
 
-#define TRIGGER_PIN 30	//PORTE PIN 30
-#define ECHO_PIN 31	//PORTE PIN 31
+#define TRIGGER_PIN 1	//PORTB PIN 1
+#define ECHO_PIN 2	//PORTB PIN 2
 
 #define MASK(x) (1UL << x)
 
@@ -24,6 +24,8 @@
 #define DELAY_RIGHT_TURN 400 //Enough delay for bot to complete a 90 degree right turn
 #define DELAY_STRAIGHT 600 //move forwards for half a second?
 #define DELAY_STOP 100 //stop and chill for a while before turning right
+
+extern volatile int flagRising;
 
 void InitUltra();
 

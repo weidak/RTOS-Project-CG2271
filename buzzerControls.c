@@ -8,6 +8,28 @@ int beats[] = {1,1,1,1,1,1,1,1,2,2,2,2,2,1,1,2,2,1,1,1,1,1,1,2,1,1,1,1,2,1,1,1,1
 int songLength = sizeof(notes);
 int tempo = 150;
 	
+void InitPWMBuzzer() {
+	//Enable clock gating for PortA
+	SIM_SCGC5 |= SIM_SCGC5_PORTA_MASK;
+	
+	//Enable clock gating for timer0
+	SIM->SCGC6 |= SIM_SCGC6_TPM1_MASK;
+	
+	//Select clock for TPM module
+	SIM->SOPT2 &= ~SIM_SOPT2_TPMSRC_MASK;
+	SIM->SOPT2 |= SIM_SOPT2_TPMSRC(1);
+	
+	//modulo value
+	TPM1->MOD = 7500;
+	
+	TPM1->SC &= ~((TPM_SC_CMOD_MASK | TPM_SC_PS_MASK));
+	TPM1->SC |= (TPM_SC_CMOD(1) | TPM_SC_PS(7)); //Set CMOD to 01 to increment according to main clock
+	TPM1->SC &= ~(TPM_SC_CPWMS_MASK); //upcounting
+	
+	TPM1_C0SC &= ~((TPM_CnSC_ELSB_MASK) | (TPM_CnSC_ELSA_MASK) | (TPM_CnSC_MSB_MASK) | (TPM_CnSC_MSA_MASK));
+	TPM1_C0SC |= (TPM_CnSC_ELSB(1) | TPM_CnSC_MSB(1));
+}	
+/*
 void InitPWMBuzzer(){
 	//Enable clock gating for PortA
 	SIM_SCGC5 |= SIM_SCGC5_PORTA_MASK;
@@ -29,11 +51,11 @@ void InitPWMBuzzer(){
 	TPM0_C2SC &= ~((TPM_CnSC_ELSB_MASK) | (TPM_CnSC_ELSA_MASK) | (TPM_CnSC_MSB_MASK) | (TPM_CnSC_MSA_MASK));
 	TPM0_C2SC |= (TPM_CnSC_ELSB(1) | TPM_CnSC_MSB(1));
 }
-
+*/
 void InitGPIOBuzzer() {
 	//Configure mode 3 for pwm pin
-	PORTA->PCR[PTA5_Pin] &= ~PORT_PCR_MUX_MASK;
-	PORTA->PCR[PTA5_Pin] |= PORT_PCR_MUX(3);
+	PORTA->PCR[BUZZER_PIN] &= ~PORT_PCR_MUX_MASK;
+	PORTA->PCR[BUZZER_PIN] |= PORT_PCR_MUX(3);
 }
 
 static void delay(volatile uint32_t nof) {
