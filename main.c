@@ -78,9 +78,14 @@ void UART2_IRQHandler() {
 	
 	NVIC_ClearPendingIRQ(UART2_IRQn);
 	
+	uint32_t currCmd = 0;
+	
 	if (UART2->S1 & UART_S1_RDRF_MASK) {
 		rx_data = UART2->D;
-		if (rx_data == CMD_SELF_DRIVING) osEventFlagsSet(self_driving_flag, 0x0001);
+		if (rx_data == CMD_SELF_DRIVING) {
+			//osEventFlagsSet(self_driving_flag, 0x0001);
+			osMessageQueuePut(selfDrivingMsg, &currCmd, NULL, NULL);
+		}
 		//if (rx_data == CMD_STOP) osEventFlagsSet(self_driving_flag, 0x0000);
 		if (rx_data == CMD_BUZZER) osEventFlagsSet(buzzer_flag, 0x0001);
 	}
@@ -93,57 +98,52 @@ void UART2_IRQHandler() {
 
 volatile int distance = 0;
 
-void TPM0_IRQHandler() {
+/*
+void TPM2_IRQHandler() {
 	if (flagRising == 1) {
 		//rising edge
 		//flagRising = 1;
 		flagRising = 0;
 		//start_time = TPM0_C4V;
-		TPM0_CNT = 0;
+		TPM2_CNT = 0;
 	}
 	else if (flagRising == 0) {
-		distance = TPM0_C4V;
-		TPM0_C4SC &= ~TPM_CnSC_CHIE_MASK;
+		distance = TPM0_C2V;
+		TPM2_C0SC &= ~TPM_CnSC_CHIE_MASK;
 	}
 	//counter = ~counter;
 	//Clear Flag
 	TPM0_STATUS |= TPM_STATUS_CH0F_MASK;
-}
+}*/
 
 volatile int state = 1;
 volatile uint32_t buzzerStatus = 0x00;
-
-
+/*
 void app_ultrasonic(void *argument) {
 	for (;;) {
 	getDistance();
 	osDelay(30);
 	}
 }
-
-
-
+*/
 void app_self_driving(void *argument) {
-	//uint32_t receivedData;
+	uint32_t receivedData;
 	for (;;) {
-		//osMessageQueueGet(selfDrivingMsg, &receivedData, NULL, osWaitForever);
+		osMessageQueueGet(selfDrivingMsg, &receivedData, NULL, osWaitForever);
 		osEventFlagsWait(self_driving_flag, 0x0001, osFlagsWaitAny, osWaitForever);
 		osSemaphoreRelease(buzzerSem);
-		TPM0_SC &= ~TPM_SC_CMOD_MASK;
-		TPM0_C4SC |= TPM_CnSC_CHIE_MASK | TPM_CnSC_ELSA(1) | TPM_CnSC_ELSB(1);
-		TPM0_CNT = 0;
-		NVIC_EnableIRQ(TPM0_IRQn);
-		TPM0->SC |= TPM_SC_CMOD(1);
+		TPM2_SC &= ~TPM_SC_CMOD_MASK;
+		TPM2_C0SC |= TPM_CnSC_CHIE_MASK | TPM_CnSC_ELSA(1) | TPM_CnSC_ELSB(1);
+		TPM2_CNT = 0;
+		NVIC_EnableIRQ(TPM2_IRQn);
+		TPM2->SC |= TPM_SC_CMOD(1);
 		
 		//uint32_t selfDriving = 0x07;
 		//osMessageQueuePut(buzzerMsg, &selfDriving, 0U, 0);
-		while (1) {
-		//	TPM0_CNT = 0;
+		//while (1) {
 			//Enable interrupts for PIT and TPM0
 			
-			//NVIC_EnableIRQ(PIT_IRQn);
-			
-		//	distance = getDistance();
+			distance = getDistance();
 
 			switch (state) {
 				case 1:
@@ -187,7 +187,7 @@ void app_self_driving(void *argument) {
 			int state_case = state;
 			float dist = distance;
 			int i = 0;
-		}
+		//}
 		/*
 		while (distance >= DISTANCE_THRESHOLD) {
 				offRed();
@@ -391,7 +391,6 @@ void control_threads(void *argument) {
 		currCmd = rx_data;
 		ledStatus = checkMove(currCmd);
 		checkBuzzer(currCmd);
-		//osMessageQueuePut(selfDrivingMsg, &currCmd, 2U, 0);
 		osMessageQueuePut(buzzerMsg, &currCmd, 0U, 0);
 		osMessageQueuePut(motorMsg, &currCmd, 1U, 0); //To update with priorities
 		osMessageQueuePut(frontLedMsg, &ledStatus, 0U, 0);
@@ -423,13 +422,13 @@ int main() {
 	InitUltra();
 	
 	//Init flags for some threads
-	buzzer_flag = osEventFlagsNew(NULL);
-	self_driving_flag = osEventFlagsNew(NULL);
-	remote_flag = osEventFlagsNew(NULL);
-	movement_flag = osEventFlagsNew(NULL); 
+	//buzzer_flag = osEventFlagsNew(NULL);
+	//self_driving_flag = osEventFlagsNew(NULL);
+	//remote_flag = osEventFlagsNew(NULL);
+	//movement_flag = osEventFlagsNew(NULL); 
 	
 	//Default to remote mode
-	osEventFlagsSet(remote_flag, 0x0001); 
+	//osEventFlagsSet(self_driving_flag, 0x0000); 
 	
 	//Red LED for debugging purposes
 	InitRedGreenLED();
@@ -437,19 +436,16 @@ int main() {
 	rx_data = 0;
 	//forwards(SLOW_SPEED);
 
-	/*
+	
 	while (1) {
 		//Reset counter
-		//start_time = 0;
 		//stop_time = 0;
-		TPM0_SC &= ~TPM_SC_CMOD_MASK;
-		TPM0->SC |= TPM_SC_CMOD(1);
-		TPM0_C4SC |= TPM_CnSC_CHIE_MASK | TPM_CnSC_ELSA(1) | TPM_CnSC_ELSB(1);
-		TPM0_CNT = 0;
-		//PIT->CHANNEL[0].LDVAL = 104;
+		TPM2->SC &= ~TPM_SC_CMOD_MASK;
+		TPM2->SC |= TPM_SC_CMOD(1);
+		TPM2_C0SC |= TPM_CnSC_CHIE_MASK | TPM_CnSC_ELSA(1) | TPM_CnSC_ELSB(1);
+		TPM2_CNT = 0;
 		//Enable interrupts for PIT and TPM0
-		NVIC_EnableIRQ(TPM0_IRQn);
-		NVIC_EnableIRQ(PIT_IRQn);
+		NVIC_EnableIRQ(TPM2_IRQn);
 		float distance1 = getDistance();
 		if (distance1 < 20) {
 			onRed(); //for visual confirmation
@@ -457,10 +453,9 @@ int main() {
 		else{
 			offRed();
 		}
-
 		int i = 0;
 	}
-	*/
+	
 
 	
 	osKernelInitialize();
@@ -471,10 +466,10 @@ int main() {
 	osThreadNew(control_threads, NULL, NULL); //Initialize the main thread that controls packets
 	osThreadNew(app_control_front_led, NULL, NULL);
 	osThreadNew(app_control_rear_led, NULL, NULL);
-	//osThreadNew(app_control_buzzer, NULL, NULL);
+	osThreadNew(app_control_buzzer, NULL, NULL);
 	osThreadNew(app_control_motor, NULL, NULL);
 	osThreadNew(app_self_driving, NULL, NULL); //should put it to a higher priority actually...
-  osThreadNew(app_ultrasonic, NULL, NULL);
+  //osThreadNew(app_ultrasonic, NULL, NULL);
 	
 	
 	//Init motor, buzzer and led msgs. Using rx_data instead of myDataPkt as we are not using structures.

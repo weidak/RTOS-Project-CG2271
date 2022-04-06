@@ -13,7 +13,7 @@ void InitUltra() {
 	//Configure TPM0 to input capture mode
 	TPM2->SC &= ~((TPM_SC_CMOD_MASK) | (TPM_SC_PS_MASK) | TPM_SC_CPWMS_MASK);
 	TPM2->SC |= TPM_SC_CMOD(1) | TPM_SC_PS(7);
-	TPM2->MOD = 3750000; //10 s timer, will reset every 1 s
+	TPM2->MOD = 375000; //10 s timer, will reset every 1 s
 	TPM2_C0SC |= TPM_CnSC_CHIE_MASK | TPM_CnSC_ELSA(1) | TPM_CnSC_ELSB(1);
 	//GPIO configuration
 	PORTE->PCR[TRIGGER_PIN] &= ~PORT_PCR_MUX_MASK;
@@ -22,7 +22,7 @@ void InitUltra() {
 	PORTB->PCR[ECHO_PIN] |= PORT_PCR_MUX(3);
 	//Set GPIO direction
 	PTE->PDDR |= MASK(TRIGGER_PIN);
-//	PTE->PDDR &= ~MASK(ECHO_PIN);
+  PTB->PDDR &= ~MASK(ECHO_PIN);
 }
 /*
 void InitUltra() {
@@ -57,7 +57,6 @@ static void delay(volatile uint32_t nof) {
 }
 
 //volatile int firstTime = 0;
-volatile int flagRising = 0;
 //volatile int flagTRIGGER, flagRising, flagFalling = 0;
 
 //volatile uint32_t start_time = 0;
@@ -80,6 +79,35 @@ volatile int flagRising = 0;
 //	TPM0_C4SC |= TPM_CnSC_CHF_MASK;
 //}
 
+volatile uint32_t stop_time = 0;
+volatile int flagRising = 0;
+
+void TPM2_IRQHandler() {
+	if (flagRising){
+		flagRising = 0;
+		TPM2_CNT = 0;
+	}
+	else {
+		stop_time = TPM2_C0V;
+		TPM2_C0SC &= ~TPM_CnSC_CHIE_MASK; //disable TPM2 interrupt
+	}
+	//Clear Flag
+	TPM2_STATUS |= TPM_STATUS_CH0F_MASK;
+}
+
+float getDistance() {
+	PTE->PDOR |= MASK(TRIGGER_PIN);
+	delay(0x40);
+	PTE->PDOR &= ~MASK(TRIGGER_PIN);
+	flagRising = 1;
+	while (stop_time == 0);
+	float time = ((float)(stop_time)) / 375000.0;
+  float distance = AIR_SPEED * time / 2; 
+	int i = 0;
+	return distance;
+}
+
+/*
 float getDistance() {
 	
 
@@ -104,4 +132,4 @@ float getDistance() {
 //	float distance = AIR_SPEED * time / 2;
 //	int i = 0;
 	//return distance;
-}
+}*/
