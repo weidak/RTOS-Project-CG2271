@@ -57,16 +57,16 @@ void InitPWMMotors(){
 
 void InitGPIOMotors(){
 	//Enable clock source for PORTB GPIO
-	SIM_SCGC5 |= SIM_SCGC5_PORTB_MASK;
+	SIM_SCGC5 |= SIM_SCGC5_PORTD_MASK;
 	//Set each pin to timer module to allow PWM mode
 	PORTD->PCR[FORW_LEFT_MOTORS] &= ~PORT_PCR_MUX_MASK; //PORTB PIN0
-	PORTD->PCR[FORW_LEFT_MOTORS] |= PORT_PCR_MUX(3); 
+	PORTD->PCR[FORW_LEFT_MOTORS] |= PORT_PCR_MUX(4); 
 	PORTD->PCR[REV_LEFT_MOTORS] &= ~PORT_PCR_MUX_MASK; //B1
-	PORTD->PCR[REV_LEFT_MOTORS] |= PORT_PCR_MUX(3);
+	PORTD->PCR[REV_LEFT_MOTORS] |= PORT_PCR_MUX(4);
 	PORTD->PCR[FORW_RIGHT_MOTORS] &= ~PORT_PCR_MUX_MASK; //B2
-	PORTD->PCR[FORW_RIGHT_MOTORS] |= PORT_PCR_MUX(3);
+	PORTD->PCR[FORW_RIGHT_MOTORS] |= PORT_PCR_MUX(4);
 	PORTD->PCR[REV_RIGHT_MOTORS] &= ~PORT_PCR_MUX_MASK; //B3
-	PORTD->PCR[REV_RIGHT_MOTORS] |= PORT_PCR_MUX(3);
+	PORTD->PCR[REV_RIGHT_MOTORS] |= PORT_PCR_MUX(4);
 }
 
 //TODO: fix up the speed values for forward moving
@@ -97,8 +97,8 @@ void left(uint32_t speed) {
 void left_stationary(uint32_t speed) {
 	FORW_LEFT_WHEELS = 0;
 	FORW_RIGHT_WHEELS = speed;
-	REV_LEFT_WHEELS = 0;
-	REV_RIGHT_WHEELS = speed;
+	REV_LEFT_WHEELS = speed;
+	REV_RIGHT_WHEELS = 0;
 }
 
 //TODO: fix up the speed values for left 90 degree
@@ -121,8 +121,8 @@ void right(uint32_t speed) {
 void right_stationary(uint32_t speed) {
 	FORW_LEFT_WHEELS = speed;
 	FORW_RIGHT_WHEELS = 0;
-	REV_LEFT_WHEELS = speed;
-	REV_RIGHT_WHEELS = 0;
+	REV_LEFT_WHEELS = 0;
+	REV_RIGHT_WHEELS = speed;
 }
 
 //TODO: fix up the speed values for right 90 degree

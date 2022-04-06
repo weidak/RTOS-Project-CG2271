@@ -336,8 +336,8 @@ void playCoffin() {
 		buzzerStatus = 0;
 		for (int i = 0; i <= coffinSongLength; i++) {
 			osSemaphoreAcquire(buzzerSem, osWaitForever);
-			TPM0->MOD = FREQ2MOD(coffin_frequency(coffins[i])); //need a function that converts freq to mod value
-			TPM0_C2V = (FREQ2MOD(coffin_frequency(coffins[i])))/5; //20% Duty Cycle
+			TPM1->MOD = FREQ2MOD(coffin_frequency(coffins[i])); //need a function that converts freq to mod value
+			TPM1_C0V = (FREQ2MOD(coffin_frequency(coffins[i])))/5; //20% Duty Cycle
 			osSemaphoreRelease(buzzerSem);
 			osDelay(coffinBeats[i] * coffinTempo);			//delay_mult100(beats[i] * tempo);
 			if (i == coffinSongLength) {
@@ -414,9 +414,9 @@ int main() {
 	InitUART2(BAUD_RATE);
 	
 	InitPWMMotors();
-	//InitPWMBuzzer();
+	InitPWMBuzzer();
 
-	//InitGPIOBuzzer();
+	InitGPIOBuzzer();
 	InitGPIOMotors();
 	InitGPIOLed();
 	
