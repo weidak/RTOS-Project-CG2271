@@ -7,8 +7,8 @@
 uint8_t dataToSend;
 
 // Replace with your network credentials
-const char* ssid = "iPhone";
-const char* password = "weidak123";
+const char* ssid = "MSI 6370";
+const char* password = "12345678";
 
 // Set web server port number to 80
 WiFiServer server(80);

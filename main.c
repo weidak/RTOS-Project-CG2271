@@ -92,8 +92,9 @@ void UART2_IRQHandler() {
 }
 
 volatile int state = 0;
-//volatile float distance;
 volatile uint32_t buzzerStatus = 0x00;
+
+volatile float distance;
 
 void app_self_driving(void *argument) {
 	//uint32_t receivedData;
@@ -103,11 +104,12 @@ void app_self_driving(void *argument) {
 		osSemaphoreRelease(buzzerSem);
 		//uint32_t selfDriving = 0x07;
 		//osMessageQueuePut(buzzerMsg, &selfDriving, 0U, 0);
-		float distance = DISTANCE_THRESHOLD;
+		distance = DISTANCE_THRESHOLD;
 		TPM0_SC &= ~TPM_SC_CMOD_MASK;
 		TPM0->SC |= TPM_SC_CMOD(1);
 		TPM0_C4SC |= TPM_CnSC_CHIE_MASK | TPM_CnSC_ELSA(1) | TPM_CnSC_ELSB(1);
 		TPM0_CNT = 0;
+		state = 0;
 		PIT->CHANNEL[0].LDVAL = 104;
 		//Enable interrupts for PIT and TPM0
 		NVIC_EnableIRQ(TPM0_IRQn);
@@ -116,6 +118,7 @@ void app_self_driving(void *argument) {
 		while (distance >= DISTANCE_THRESHOLD) {
 				offRed();
 				distance = getDistance();
+			  osDelay(1);
 				forwards(SD_SPEED); 
 		}
 		onRed();
@@ -155,16 +158,24 @@ void app_self_driving(void *argument) {
 		left45(SD_SPEED); // move(CMD_STOP, SD_SPEED); //
 		//osDelay(DELAY_STOP);
 	
-		offRed();
-		
+		//offRed();
+		//forwards(FULL_SPEED);
 		distance = DISTANCE_THRESHOLD;
+		
+		TPM0_SC &= ~TPM_SC_CMOD_MASK;
+		TPM0->SC |= TPM_SC_CMOD(1);
+		TPM0_C4SC |= TPM_CnSC_CHIE_MASK | TPM_CnSC_ELSA(1) | TPM_CnSC_ELSB(1);
+		TPM0_CNT = 0;
+		PIT->CHANNEL[0].LDVAL = 104;
+
 		while (distance >= DISTANCE_THRESHOLD) {
-			onRed();
+			offRed();
 			distance = getDistance();
 			float dist = distance;
-			move(CMD_FORWARD, SD_SPEED);  
+			osDelay(1);
+			forwards(FULL_SPEED); 
 		}
-		offRed();
+		//offRed();
 		stop_moving();
 		osDelay(DELAY_STOP);
 		rx_data = 0x00; //Force rx_data to change back to 0

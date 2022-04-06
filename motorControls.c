@@ -64,8 +64,8 @@ void reverse(uint32_t speed) {
 
 //TODO: fix up the speed values for turning left while moving 
 void left(uint32_t speed) {
-	FORW_LEFT_WHEELS = speed/5;
-	FORW_RIGHT_WHEELS = speed;
+	FORW_LEFT_WHEELS = 0;
+	FORW_RIGHT_WHEELS = speed*2;
 	REV_LEFT_WHEELS = 0;
 	REV_RIGHT_WHEELS = 0;
 }
@@ -88,8 +88,8 @@ void left45(uint32_t speed) {
 
 //TODO: fix up the speed values for turning right while moving
 void right(uint32_t speed) {
-	FORW_LEFT_WHEELS = speed;
-	FORW_RIGHT_WHEELS = speed/5;
+	FORW_LEFT_WHEELS = speed*2;
+	FORW_RIGHT_WHEELS = 0;
 	REV_LEFT_WHEELS = 0;
 	REV_RIGHT_WHEELS = 0;
 }
