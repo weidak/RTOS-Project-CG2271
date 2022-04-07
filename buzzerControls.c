@@ -10,7 +10,7 @@ int tempo = 150;
 	
 void InitPWMBuzzer() {
 	//Enable clock gating for PortA
-	SIM_SCGC5 |= SIM_SCGC5_PORTA_MASK;
+	SIM_SCGC5 |= SIM_SCGC5_PORTB_MASK;
 	
 	//Enable clock gating for timer0
 	SIM->SCGC6 |= SIM_SCGC6_TPM1_MASK;
@@ -54,8 +54,8 @@ void InitPWMBuzzer(){
 */
 void InitGPIOBuzzer() {
 	//Configure mode 3 for pwm pin
-	PORTA->PCR[BUZZER_PIN] &= ~PORT_PCR_MUX_MASK;
-	PORTA->PCR[BUZZER_PIN] |= PORT_PCR_MUX(3);
+	PORTB->PCR[BUZZER_PIN] &= ~PORT_PCR_MUX_MASK;
+	PORTB->PCR[BUZZER_PIN] |= PORT_PCR_MUX(3);
 }
 
 static void delay(volatile uint32_t nof) {
@@ -86,8 +86,8 @@ void playSong() {
 	while (1) {
 		for (int i = 0; i < songLength; i++) {
 			osSemaphoreAcquire(buzzerSem, osWaitForever);
-			TPM0->MOD = FREQ2MOD(frequency(notes[i])); //need a function that converts freq to mod value
-			TPM0_C2V = (FREQ2MOD(frequency(notes[i])))/5; //20% Duty Cycle
+			TPM1->MOD = FREQ2MOD(frequency(notes[i])); //need a function that converts freq to mod value
+			TPM1_C0V = (FREQ2MOD(frequency(notes[i])))/5; //20% Duty Cycle
 			osSemaphoreRelease(buzzerSem);
 			osDelay(beats[i] * tempo); //delay_mult100(beats[i] * tempo);
 		}
@@ -98,8 +98,8 @@ void playCompletedSong() {
 	while (1) {
 		for (int i = 0; i < num_notes; i++) {
 			osSemaphoreAcquire(buzzerSem, osWaitForever);
-			TPM0->MOD = FREQ2MOD(musical_notes[i]); //need a function that converts freq to mod value
-			TPM0_C2V = (FREQ2MOD(musical_notes[i]))/5; //20% Duty Cycle
+			TPM1->MOD = FREQ2MOD(musical_notes[i]); //need a function that converts freq to mod value
+			TPM1_C0V = (FREQ2MOD(musical_notes[i]))/5; //20% Duty Cycle
 			osSemaphoreRelease(buzzerSem);
 		}
 	}
