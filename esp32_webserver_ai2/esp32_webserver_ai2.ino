@@ -7,7 +7,7 @@
 uint8_t dataToSend;
 
 // Replace with your network credentials
-const char* ssid = "MSI 6370";
+const char* ssid = "RY";
 const char* password = "12345678";
 
 // Set web server port number to 80

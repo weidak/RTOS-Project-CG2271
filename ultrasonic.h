@@ -17,14 +17,14 @@
 #define SD_SPEED MEDIUM_SPEED
 
 //Current distance threshold is at 20cm
-#define DISTANCE_THRESHOLD 20 
+#define DISTANCE_THRESHOLD 45
 
 //Delays subjected to changes, currently calibrated at SD_SPEED = HALF_SPEED (4000)
-#define DELAY_LEFT_TURN 260 //Enough delay for bot to complete a 45 degree left turn
-#define DELAY_RIGHT_TURN 400 //Enough delay for bot to complete a 90 degree right turn
-#define DELAY_STRAIGHT 600 //move forwards for half a second?
+#define DELAY_LEFT_TURN 100 //Enough delay for bot to complete a 45 degree left turn
+#define DELAY_RIGHT_TURN 230 //Enough delay for bot to complete a 90 degree right turn
+#define DELAY_STRAIGHT 250 //move forwards for half a second?
 #define DELAY_STOP 100 //stop and chill for a while before turning right
-
+#define DELAY_REV 250
 void InitUltra();
 
 float getDistance();

@@ -129,6 +129,9 @@ void app_ultrasonic(void *argument) {
 	}
 }
 */
+
+int counter_ultra = 0;
+
 void app_self_driving(void *argument) {
 	uint32_t receivedData;
 	for (;;) {
@@ -157,11 +160,19 @@ void app_self_driving(void *argument) {
 					forwards(SD_SPEED);
 					//int counter = 0;
 					if (distance < DISTANCE_THRESHOLD) {
-						state++;
-						onRed();
+						if (counter_ultra == 1) {
+							state++;
+							onRed();
+							counter_ultra = 0;
+						}
+						counter_ultra++;
 					}
 					break;
 				case 2:
+					stop_moving();
+					osDelay(DELAY_STOP);
+					reverse(SD_SPEED);
+					osDelay(DELAY_REV);
 					stop_moving();
 					osDelay(DELAY_STOP);
 					left45(SD_SPEED); // move(CMD_STOP, SD_SPEED); //
@@ -186,6 +197,11 @@ void app_self_driving(void *argument) {
 					state++;
 					break;
 				default:
+					if (counter_ultra == 0) {
+						reverse(SD_SPEED);
+						osDelay(20);
+						counter_ultra++;
+					}
 					stop_moving();
 					osDelay(DELAY_STOP);
 					rx_data = 0x00; //Force rx_data to change back to 0
@@ -310,10 +326,10 @@ void app_control_motor(void *argument) {
 				left(MEDIUM_SPEED);
 				break;
 			case CMD_LEFT_STATIONARY:
-				left_stationary(FULL_SPEED);
+				left_stationary(MEDIUM_SPEED);
 				break;
 			case CMD_RIGHT_STATIONARY:
-				right_stationary(FULL_SPEED);
+				right_stationary(MEDIUM_SPEED);
 				break;
 			case 0x07: //self driving mode
 				//do nothing, should not stop moving
