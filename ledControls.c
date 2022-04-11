@@ -40,20 +40,6 @@ void InitGPIOLed(){
 	PTC->PDDR |= MASK(REAR_LED);
 }
 
-void rearLed250() {
-	PTC->PDOR |= MASK(REAR_LED);
-	osDelay(REAR_STATIONARY);
-	PTC->PDOR &= ~MASK(REAR_LED);
-	osDelay(REAR_STATIONARY);
-}
-
-void rearLed500() {
-	PTC->PDOR |= MASK(REAR_LED);
-	osDelay(REAR_MOVING);
-	PTC->PDOR &= ~MASK(REAR_LED);
-	osDelay(REAR_MOVING);
-}
-
 void offLED(uint8_t number) {
 	PTC->PDOR &= ~MASK(number);
 }
@@ -62,10 +48,18 @@ void onLED(uint8_t number) {
 	PTC->PDOR |= MASK(number);
 }
 
-void onOffLED(uint8_t number){ 
-	onLED(number);
-	osDelay(100);//delay(0xFFFF);
-	offLED(number);
+void rearLed250() {
+	onLED(REAR_LED);
+	osDelay(REAR_STATIONARY);
+	offLED(REAR_LED);
+	osDelay(REAR_STATIONARY);
+}
+
+void rearLed500() {
+	onLED(REAR_LED);
+	osDelay(REAR_MOVING);
+	offLED(REAR_LED);
+	osDelay(REAR_MOVING);
 }
 
 void onAllLED(){
@@ -73,6 +67,12 @@ void onAllLED(){
 		onLED(frontledstrip[i]);
 	}
 	osDelay(100);
+}
+
+void onOffLED(uint8_t number){ 
+	onLED(number);
+	osDelay(100);
+	offLED(number);
 }
 
 void runningFrontLED() {

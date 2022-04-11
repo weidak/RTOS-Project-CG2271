@@ -22,8 +22,8 @@
 //Delays subjected to changes, currently calibrated at SD_SPEED = HALF_SPEED (4000)
 #define DELAY_LEFT_TURN 260 //Enough delay for bot to complete a 45 degree left turn
 #define DELAY_RIGHT_TURN 400 //Enough delay for bot to complete a 90 degree right turn
-#define DELAY_STRAIGHT 600 //move forwards for half a second?
-#define DELAY_STOP 100 //stop and chill for a while before turning right
+#define DELAY_STRAIGHT 600 
+#define DELAY_STOP 100 
 
 void InitUltra();
 

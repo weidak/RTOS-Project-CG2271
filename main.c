@@ -19,24 +19,27 @@
 #define CMD_STOP 0x08
 #define CMD_BUZZER 0x09
 
-//Initialize the msgs that control various threads.
+//Initialize the priorities
 const osThreadAttr_t priorityAboveNormal = {
   .priority = osPriorityAboveNormal
-};
-
-const osThreadAttr_t priorityAboveNormal2 = {
-	.priority = osPriorityAboveNormal2
 };
 
 const osThreadAttr_t priorityAboveNormal1 = {
 	.priority = osPriorityAboveNormal1
 };
 
-osMessageQueueId_t motorMsg, buzzerMsg, frontLedMsg, rearLedMsg, completedBuzzerMsg, selfDrivingMsg;
+const osThreadAttr_t priorityAboveNormal2 = {
+	.priority = osPriorityAboveNormal2
+};
 
-osEventFlagsId_t buzzer_flag, self_driving_flag, remote_flag, movement_flag;
+volatile float distance = 0;
+volatile int state = 1;
+volatile uint32_t buzzerStatus = 0x00;
+volatile uint32_t rx_data;
 
-osSemaphoreId_t buzzerSem, movementSem;
+osMessageQueueId_t motorMsg, buzzerMsg, frontLedMsg, rearLedMsg, completedBuzzerMsg;
+
+osSemaphoreId_t buzzerSem;
 
 osThreadId_t self_driving_Id;
 
@@ -71,9 +74,10 @@ void InitRedGreenLED() {
 	PTB->PDDR |= MASK(RED_LED);
 	PTB->PDDR |= MASK(GREEN_LED);
 }
-/*---------------------*/
 
-volatile uint32_t rx_data;
+/* ------------------------------------
+	UART2 IRQ Handler
+------------------------------------ */
 
 void UART2_IRQHandler() {
 	
@@ -83,68 +87,36 @@ void UART2_IRQHandler() {
 	
 	if (UART2->S1 & UART_S1_RDRF_MASK) {
 		rx_data = UART2->D;
-		if (rx_data == CMD_SELF_DRIVING) {
-			osEventFlagsSet(self_driving_flag, 0x0001);
-			osEventFlagsSet(remote_flag, 0x0001);
-			osThreadFlagsSet(self_driving_Id, 0x0001);
-			osMessageQueuePut(selfDrivingMsg, &currCmd, NULL, NULL);
-		}
-		//if (rx_data == CMD_STOP) osEventFlagsSet(self_driving_flag, 0x0000);
-		if (rx_data == CMD_BUZZER) osEventFlagsSet(buzzer_flag, 0x0001);
+		if (rx_data == CMD_SELF_DRIVING) osThreadFlagsSet(self_driving_Id, 0x0001);
 	}
 	
 	if (UART2->S1 & (UART_S1_OR_MASK | UART_S1_NF_MASK | UART_S1_FE_MASK | UART_S1_PF_MASK)) {
-		//handle error
-		//clear flag
+		//Handle error and clear flag
 	}
 }
 
-volatile float distance = 0;
+/* ------------------------------------
+	Self-Driving Thread
+------------------------------------ */
 
-/*
-void TPM2_IRQHandler() {
-	if (flagRising == 1) {
-		//rising edge
-		//flagRising = 1;
-		flagRising = 0;
-		//start_time = TPM0_C4V;
+void InitSelfDriving() {
+		TPM2_SC &= ~TPM_SC_CMOD_MASK;
+		TPM2_C0SC |= TPM_CnSC_CHIE_MASK | TPM_CnSC_ELSA(1) | TPM_CnSC_ELSB(1);
 		TPM2_CNT = 0;
-	}
-	else if (flagRising == 0) {
-		distance = TPM0_C2V;
-		TPM2_C0SC &= ~TPM_CnSC_CHIE_MASK;
-	}
-	//counter = ~counter;
-	//Clear Flag
-	TPM0_STATUS |= TPM_STATUS_CH0F_MASK;
-}*/
-
-volatile int state = 1;
-volatile uint32_t buzzerStatus = 0x00;
-/*
-void app_ultrasonic(void *argument) {
-	for (;;) {
-	getDistance();
-	osDelay(30);
-	}
+		NVIC_EnableIRQ(TPM2_IRQn);
+		TPM2->SC |= TPM_SC_CMOD(1);
 }
-*/
+
 void app_self_driving(void *argument) {
 	uint32_t receivedData;
 	for (;;) {
 		osThreadFlagsWait(0x0001, osFlagsWaitAny, osWaitForever);
 		osSemaphoreRelease(buzzerSem);
 		uint32_t rx = rx_data;
-		TPM2_SC &= ~TPM_SC_CMOD_MASK;
-		TPM2_C0SC |= TPM_CnSC_CHIE_MASK | TPM_CnSC_ELSA(1) | TPM_CnSC_ELSB(1);
-		TPM2_CNT = 0;
-		NVIC_EnableIRQ(TPM2_IRQn);
-		TPM2->SC |= TPM_SC_CMOD(1);
+
+		InitSelfDriving();
 		
-		//uint32_t selfDriving = 0x07;
-		//osMessageQueuePut(buzzerMsg, &selfDriving, 0U, 0);
 		while (1) {
-			//Enable interrupts for PIT and TPM0
 			
 			distance = getDistance();
 
@@ -152,10 +124,7 @@ void app_self_driving(void *argument) {
 				case 1:
 				case 7:
 					offRed();
-					//distance = DISTANCE_THRESHOLD;
-					//distance = getDistance();
 					forwards(SD_SPEED);
-					//int counter = 0;
 					if (distance < DISTANCE_THRESHOLD) {
 						state++;
 						onRed();
@@ -164,17 +133,17 @@ void app_self_driving(void *argument) {
 				case 2:
 					stop_moving();
 					osDelay(DELAY_STOP);
-					left45(SD_SPEED); // move(CMD_STOP, SD_SPEED); //
+					left45(SD_SPEED); 
 					state++;
 					break;
 				case 3:
 				case 4:
 				case 5:
-					forwards(SD_SPEED); //move(CMD_FORWARD, SD_SPEED);  
+					forwards(SD_SPEED);   
 					osDelay(DELAY_STRAIGHT);
-					stop_moving();//move(CMD_STOP, SD_SPEED);  
+					stop_moving();
 					osDelay(DELAY_STOP);
-					right90(SD_SPEED); //move(CMD_RIGHT90, SD_SPEED); //90 degree
+					right90(SD_SPEED); 
 					state++;
 					break;
 				case 6:
@@ -182,7 +151,7 @@ void app_self_driving(void *argument) {
 					osDelay(DELAY_STRAIGHT);
 					stop_moving();
 					osDelay(DELAY_STOP);
-					left45(SD_SPEED); // move(CMD_STOP, SD_SPEED); //
+					left45(SD_SPEED); 
 					state++;
 					break;
 				default:
@@ -190,80 +159,32 @@ void app_self_driving(void *argument) {
 					osDelay(DELAY_STOP);
 					rx_data = 0x00; //Force rx_data to change back to 0
 					buzzerStatus = 1;
-					//distance = getDistance();
 			}
 			
 			int state_case = state;
 			float dist = distance;
 			int i = 0;
 		}
-		/*
-		while (distance >= DISTANCE_THRESHOLD) {
-				offRed();
-				distance = getDistance();
-			  osDelay(1);
-				forwards(SD_SPEED); 
-		}
-		onRed();
-		stop_moving();
-		osDelay(DELAY_STOP);
-		left45(SD_SPEED); // move(CMD_STOP, SD_SPEED); //
-		//osDelay(DELAY_STOP);
-		//move(CMD_LEFT45, SD_SPEED);   //45 degree 
-		//osDelay(DELAY_LEFT_TURN);
+	}
+}
 
-		forwards(SD_SPEED); //move(CMD_FORWARD, SD_SPEED); 
-		osDelay(DELAY_STRAIGHT);
-		stop_moving(); //move(CMD_STOP, SD_SPEED);   
-		osDelay(DELAY_STOP);//osDelay(DELAY_STOP);
-		right90(SD_SPEED); //move(CMD_RIGHT90, SD_SPEED); //90 degree
-		//osDelay(DELAY_RIGHT_TURN);
-		
-		forwards(SD_SPEED); //move(CMD_FORWARD, SD_SPEED);  
-		osDelay(DELAY_STRAIGHT);
-		stop_moving();//move(CMD_STOP, SD_SPEED);  
-		osDelay(DELAY_STOP);
-		right90(SD_SPEED); //move(CMD_RIGHT90, SD_SPEED); //90 degree
-		//osDelay(DELAY_RIGHT_TURN);
-		
-		forwards(SD_SPEED); //move(CMD_FORWARD, SD_SPEED);  
-		osDelay(DELAY_STRAIGHT);
-		stop_moving(); //move(CMD_STOP, SD_SPEED);  
-		osDelay(DELAY_STOP);//osDelay(DELAY_STOP);
-		right90(SD_SPEED); //move(CMD_RIGHT90, SD_SPEED); //90 degree
-		//osDelay(DELAY_RIGHT_TURN);
-		
-		forwards(SD_SPEED); //move(CMD_FORWARD, SD_SPEED);  
-		osDelay(DELAY_STRAIGHT);
-		stop_moving();//move(CMD_STOP, SD_SPEED);  
-		osDelay(DELAY_STOP);
-				
-		left45(SD_SPEED); // move(CMD_STOP, SD_SPEED); //
-		//osDelay(DELAY_STOP);
-	
-		//offRed();
-		//forwards(FULL_SPEED);
-		distance = DISTANCE_THRESHOLD;
-		
-		TPM0_SC &= ~TPM_SC_CMOD_MASK;
-		TPM0->SC |= TPM_SC_CMOD(1);
-		TPM0_C4SC |= TPM_CnSC_CHIE_MASK | TPM_CnSC_ELSA(1) | TPM_CnSC_ELSB(1);
-		TPM0_CNT = 0;
-		PIT->CHANNEL[0].LDVAL = 104;
+/* ------------------------------------
+	LED Control Functions and Threads
+------------------------------------ */
 
-		while (distance >= DISTANCE_THRESHOLD) {
-			offRed();
-			distance = getDistance();
-			float dist = distance;
-			osDelay(1);
-			forwards(FULL_SPEED); 
-		}
-		//offRed();
-		stop_moving();
-		osDelay(DELAY_STOP);
-		rx_data = 0x00; //Force rx_data to change back to 0
-		buzzerStatus = 1;
-		*/
+uint32_t checkMove(uint32_t cmd) {
+	switch (cmd) {
+		case CMD_FORWARD:
+		case CMD_REVERSE:
+		case CMD_LEFT:
+		case CMD_RIGHT:
+		case CMD_LEFT_STATIONARY:
+		case CMD_RIGHT_STATIONARY:
+		case CMD_SELF_DRIVING:
+			return 0x01;
+			break;
+		default:
+			return 0x00;
 	}
 }
 
@@ -291,17 +212,21 @@ void app_control_front_led(void *argument) {
 	}
 }
 
+/* ------------------------------------
+	Motor Control Thread
+------------------------------------ */
+
 void app_control_motor(void *argument) {
 	uint32_t currCmd;
 	for (;;) {
 		currCmd = rx_data;
 		switch (currCmd) {
 			case CMD_FORWARD:
-				forwards(FULL_SPEED); //left45(FULL_SPEED); // 
+				forwards(FULL_SPEED); 
 				osSemaphoreRelease(buzzerSem);
 				break;
 			case CMD_REVERSE:
-				reverse(FULL_SPEED); // right90(FULL_SPEED); //
+				reverse(FULL_SPEED); 
 				break;
 			case CMD_RIGHT:
 				right(MEDIUM_SPEED);
@@ -325,6 +250,10 @@ void app_control_motor(void *argument) {
 		}
 	}
 }
+	
+/* ------------------------------------
+	Buzzer-related Functions and Threads
+------------------------------------ */
 
 char coffins[] = "g gDC l a aaC lag gLALALg gLALALg gDC l a aaC lag gLALALg gLALALllllDDDDCCCCFFFFGGGGGGGGGGGGClaf";
 int coffinBeats[] = {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1};
@@ -339,16 +268,15 @@ int coffin_frequency(char note) {
 		}
 		return 0;
 }
-	
-	
+
 void playCoffin() {
 		buzzerStatus = 0;
 		for (int i = 0; i <= coffinSongLength; i++) {
 			osSemaphoreAcquire(buzzerSem, osWaitForever);
-			TPM1->MOD = FREQ2MOD(coffin_frequency(coffins[i])); //need a function that converts freq to mod value
-			TPM1_C0V = (FREQ2MOD(coffin_frequency(coffins[i])))/5; //20% Duty Cycle
+			TPM1->MOD = FREQ2MOD(coffin_frequency(coffins[i])); 
+			TPM1_C0V = (FREQ2MOD(coffin_frequency(coffins[i])))/5; 
 			osSemaphoreRelease(buzzerSem);
-			osDelay(coffinBeats[i] * coffinTempo);			//delay_mult100(beats[i] * tempo);
+			osDelay(coffinBeats[i] * coffinTempo);		
 			if (i == coffinSongLength) {
 				i = 0;
 			} 
@@ -371,22 +299,6 @@ void app_control_buzzer(void *argument) {
 	}
 }
 
-uint32_t checkMove(uint32_t cmd) {
-	switch (cmd) {
-		case CMD_FORWARD:
-		case CMD_REVERSE:
-		case CMD_LEFT:
-		case CMD_RIGHT:
-		case CMD_LEFT_STATIONARY:
-		case CMD_RIGHT_STATIONARY:
-		case CMD_SELF_DRIVING:
-			return 0x01;
-			break;
-		default:
-			return 0x00;
-	}
-}
-
 void checkBuzzer(uint32_t cmd) {
 	if (cmd == 0x09) {
 		buzzerStatus = 0x01;
@@ -401,7 +313,7 @@ void control_threads(void *argument) {
 		ledStatus = checkMove(currCmd);
 		checkBuzzer(currCmd);
 		osMessageQueuePut(buzzerMsg, &currCmd, 0U, 0);
-		osMessageQueuePut(motorMsg, &currCmd, 1U, 0); //To update with priorities
+		osMessageQueuePut(motorMsg, &currCmd, 1U, 0); 
 		osMessageQueuePut(frontLedMsg, &ledStatus, 0U, 0);
 	}
 }
@@ -430,69 +342,31 @@ int main() {
 	
 	InitUltra();
 	
-	//Init flags for some threads
-	//buzzer_flag = osEventFlagsNew(NULL);
-	self_driving_flag = osEventFlagsNew(NULL);
-	remote_flag = osEventFlagsNew(NULL);
-	//movement_flag = osEventFlagsNew(NULL); 
-	
-	//Default to remote mode
-	//osEventFlagsSet(self_driving_flag, 0x0000); 
-	
-	//Red LED for debugging purposes
+	//Red and Green LED for debugging purposes
 	InitRedGreenLED();
 	
 	rx_data = 0;
-	//forwards(SLOW_SPEED);
 
-	/*
-	while (1) {
-		//Reset counter
-		//stop_time = 0;
-		TPM2->SC &= ~TPM_SC_CMOD_MASK;
-		TPM2->SC |= TPM_SC_CMOD(1);
-		TPM2_C0SC |= TPM_CnSC_CHIE_MASK | TPM_CnSC_ELSA(1) | TPM_CnSC_ELSB(1);
-		TPM2_CNT = 0;
-		//Enable interrupts for PIT and TPM0
-		NVIC_EnableIRQ(TPM2_IRQn);
-		float distance1 = getDistance();
-		if (distance1 < 20) {
-			onRed(); //for visual confirmation
-		} 
-		else{
-			offRed();
-		}
-		int i = 0;
-	}
-	*/
-
-	
 	osKernelInitialize();
 	
-	buzzerSem = osSemaphoreNew(1, 0, NULL); //1 available so can start tune immediately
-	movementSem = osSemaphoreNew(1, 1, NULL);
+	buzzerSem = osSemaphoreNew(1, 0, NULL); // Initialize only when moving, thus max 1 initial 0
 	
-	osThreadNew(control_threads, NULL, NULL); //Initialize the main thread that controls packets
+	//Self Driving thread
+	self_driving_Id = osThreadNew(app_self_driving, NULL, NULL); 
+	
+	osThreadNew(control_threads, NULL, NULL); 
 	osThreadNew(app_control_front_led, NULL, NULL);
 	osThreadNew(app_control_rear_led, NULL, NULL);
 	osThreadNew(app_control_buzzer, NULL, NULL);
 	osThreadNew(app_control_motor, NULL, NULL);
-	self_driving_Id = osThreadNew(app_self_driving, NULL, NULL); //should put it to a higher priority actually...
-  //osThreadNew(app_ultrasonic, NULL, NULL);
-	
-	
-	//Init motor, buzzer and led msgs. Using rx_data instead of myDataPkt as we are not using structures.
+
 	motorMsg = osMessageQueueNew(QUEUE_MSG_COUNT, sizeof(rx_data) , NULL);
 	buzzerMsg = osMessageQueueNew(QUEUE_MSG_COUNT, sizeof(rx_data), NULL);
 	frontLedMsg = osMessageQueueNew(QUEUE_MSG_COUNT, sizeof(rx_data), NULL);
 	rearLedMsg = osMessageQueueNew(QUEUE_MSG_COUNT, sizeof(rx_data), NULL);
-	selfDrivingMsg = osMessageQueueNew(QUEUE_MSG_COUNT, sizeof(rx_data), NULL);
 
 	osKernelStart();
 	
-	for (;;) { 
-		//onAllLED();
-		//controlLED(); 
-	}
+	for (;;) { }
 	
 }

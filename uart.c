@@ -36,41 +36,8 @@ void InitUART2(uint32_t baud_rate) {
 	NVIC_SetPriority(UART2_IRQn, UART2_INT_PRIO);
 	NVIC_ClearPendingIRQ(UART2_IRQn);
 	NVIC_EnableIRQ(UART2_IRQn);
-	
-	//UART2->C2 |= (UART_C2_TIE_MASK | UART_C2_RIE_MASK); //transmit interrupt enable and receive interrupt enable
-	
+		
 	UART2->C2 |= UART_C2_RIE_MASK;
 	
-	//Since we should not need to use queues
-	//QInit(&tx_q);
-	//QInit(&rx_q);
 }
 
-/*void UART2_IRQHandler() {
-	
-	NVIC_ClearPendingIRQ(UART2_IRQn);
-	
-	/* Don't need to transmit, only receive from controller? 
-	if (UART2->S1 & UART_S1_TDRE_MASK) {
-		//Space for more characters:
-		if (!isEmpty(&tx_q)) UART2->D = dequeue(&tx_q);
-		else UART2->C2 &= ~UART_C2_TIE_MASK;
-	}
-	*/
-	/*if (UART2->S1 & UART_S1_RDRF_MASK) {
-		//receives a character
-		
-		//if (!isFull(&rx_q)) enqueue(&rx_q, UART2->D);
-		//else while (1); //queue is full, stay in interrupt?
-		
-	}
-	
-	if (UART2->S1 & (UART_S1_OR_MASK 
-									| UART_S1_NF_MASK 
-									| UART_S1_FE_MASK 
-									| UART_S1_PF_MASK)) {
-		//handle error
-										
-		//clear flag
-	}
-}*/

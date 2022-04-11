@@ -8,10 +8,6 @@
 //Initialisation of GPIO and PORTC to control flashing of LEDs
 void InitGPIOLed();
 
-//TODO: States
-void forwardState();
-void reverseState();
-
 //Helper Functions
 void offLED(uint8_t number);
 void onLED(uint8_t number);
