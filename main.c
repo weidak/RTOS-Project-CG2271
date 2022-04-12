@@ -143,7 +143,7 @@ void app_self_driving(void *argument) {
 		TPM2_CNT = 0;
 		NVIC_EnableIRQ(TPM2_IRQn);
 		TPM2->SC |= TPM_SC_CMOD(1);
-		
+		int fast_stop = 0;
 		//uint32_t selfDriving = 0x07;
 		//osMessageQueuePut(buzzerMsg, &selfDriving, 0U, 0);
 		while (1) {
@@ -153,18 +153,20 @@ void app_self_driving(void *argument) {
 
 			switch (state) {
 				case 1:
-				case 7:
 					offRed();
-					//distance = DISTANCE_THRESHOLD;
-					//distance = getDistance();
-					forwards(SD_SPEED);
-					//int counter = 0;
+					if (counter_ultra == 0) {
+						forwards(FIRST_FORWARD_SPEED);
+					}
+					else{
+						forwards(3000);
+					}
 					if (distance < DISTANCE_THRESHOLD) {
 						if (counter_ultra == 1) {
 							state++;
 							onRed();
 							counter_ultra = 0;
 						}
+						
 						counter_ultra++;
 					}
 					break;
@@ -190,17 +192,29 @@ void app_self_driving(void *argument) {
 					break;
 				case 6:
 					forwards(SD_SPEED);
-					osDelay(DELAY_STRAIGHT);
+					osDelay(DELAY_STRAIGHT + 150);
 					stop_moving();
 					osDelay(DELAY_STOP);
-					left45(SD_SPEED); // move(CMD_STOP, SD_SPEED); //
+					left45(SD_SPEED - 50); // move(CMD_STOP, SD_SPEED); //
 					state++;
 					break;
-				default:
-					if (counter_ultra == 0) {
-						reverse(SD_SPEED);
-						osDelay(20);
+				case 7:
+					offRed();
+					forwards(RETURN_FORWARD_SPEED);
+					if (distance < DISTANCE_THRESHOLD - 10) {
+						if (counter_ultra == 1) {
+							state++;
+							onRed();
+							counter_ultra = 0;
+						}
 						counter_ultra++;
+					}
+					break;
+				default:
+					if (fast_stop == 0) {
+						reverse(SD_SPEED);
+						osDelay(50);
+						fast_stop = 1;
 					}
 					stop_moving();
 					osDelay(DELAY_STOP);
@@ -208,7 +222,7 @@ void app_self_driving(void *argument) {
 					buzzerStatus = 1;
 					//distance = getDistance();
 			}
-			
+			//for debugging purpose
 			int state_case = state;
 			float dist = distance;
 			int i = 0;
@@ -320,16 +334,16 @@ void app_control_motor(void *argument) {
 				reverse(FULL_SPEED); // right90(FULL_SPEED); //
 				break;
 			case CMD_RIGHT:
-				right(MEDIUM_SPEED);
+				right(HALF_SPEED);
 				break;
 			case CMD_LEFT:
-				left(MEDIUM_SPEED);
+				left(HALF_SPEED);
 				break;
 			case CMD_LEFT_STATIONARY:
-				left_stationary(MEDIUM_SPEED);
+				left_stationary(HALF_SPEED);
 				break;
 			case CMD_RIGHT_STATIONARY:
-				right_stationary(MEDIUM_SPEED);
+				right_stationary(HALF_SPEED);
 				break;
 			case 0x07: //self driving mode
 				//do nothing, should not stop moving
