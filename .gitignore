@@ -17,3 +17,8 @@ project.uvguix.User
 project.uvoptx
 project.uvprojx
 Boards/
+.vs/ProjectSettings.json
+.vs/slnx.sqlite
+.vs/Motor Code/v16/Browse.VC.db
+.vs/Motor Code/v16/Browse.VC.db-shm
+.vs/Motor Code/v16/Browse.VC.db-wal

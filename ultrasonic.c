@@ -27,7 +27,7 @@ void InitUltra() {
 	PORTB->PCR[ECHO_PIN] |= PORT_PCR_MUX(3);
 	//Set GPIO direction
 	PTE->PDDR |= MASK(TRIGGER_PIN);
-  PTB->PDDR &= ~MASK(ECHO_PIN);
+	PTB->PDDR &= ~MASK(ECHO_PIN);
 }
 
 static void delay(volatile uint32_t nof) {
@@ -58,10 +58,7 @@ float getDistance() {
 	delay(0x40);
 	PTE->PDOR &= ~MASK(TRIGGER_PIN);
 	while (stop_time == 0);
-	uint32_t start = start_time;
-	uint32_t stop = stop_time;
 	float time = ((float)(stop_time)) / 375000.0;
-  float distance = AIR_SPEED * time / 2; 
-	int i = 0;
+	float distance = AIR_SPEED * time / 2; 
 	return distance;
 }

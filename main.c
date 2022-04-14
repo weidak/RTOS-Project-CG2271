@@ -106,12 +106,8 @@ void InitSelfDriving() {
 		NVIC_EnableIRQ(TPM2_IRQn);
 		TPM2->SC |= TPM_SC_CMOD(1);
 }
-<<<<<<< HEAD
-*/
 
 int counter_ultra = 0;
-=======
->>>>>>> 507f33bb8fceac9e25c2eea916c42d86b846a702
 
 void app_self_driving(void *argument) {
 	uint32_t receivedData;
@@ -119,37 +115,19 @@ void app_self_driving(void *argument) {
 		osThreadFlagsWait(0x0001, osFlagsWaitAny, osWaitForever);
 		osSemaphoreRelease(buzzerSem);
 		uint32_t rx = rx_data;
-<<<<<<< HEAD
-		TPM2_SC &= ~TPM_SC_CMOD_MASK;
-		TPM2_C0SC |= TPM_CnSC_CHIE_MASK | TPM_CnSC_ELSA(1) | TPM_CnSC_ELSB(1);
-		TPM2_CNT = 0;
-		NVIC_EnableIRQ(TPM2_IRQn);
-		TPM2->SC |= TPM_SC_CMOD(1);
 		int fast_stop = 0;
-		//uint32_t selfDriving = 0x07;
-		//osMessageQueuePut(buzzerMsg, &selfDriving, 0U, 0);
-=======
-
 		InitSelfDriving();
-		
->>>>>>> 507f33bb8fceac9e25c2eea916c42d86b846a702
-		while (1) {
-			
+		while (1) {			
 			distance = getDistance();
-
 			switch (state) {
 				case 1:
 					offRed();
-<<<<<<< HEAD
 					if (counter_ultra == 0) {
 						forwards(FIRST_FORWARD_SPEED);
 					}
 					else{
 						forwards(3000);
 					}
-=======
-					forwards(SD_SPEED);
->>>>>>> 507f33bb8fceac9e25c2eea916c42d86b846a702
 					if (distance < DISTANCE_THRESHOLD) {
 						if (counter_ultra == 1) {
 							state++;
@@ -163,15 +141,11 @@ void app_self_driving(void *argument) {
 				case 2:
 					stop_moving();
 					osDelay(DELAY_STOP);
-<<<<<<< HEAD
 					reverse(SD_SPEED);
 					osDelay(DELAY_REV);
 					stop_moving();
 					osDelay(DELAY_STOP);
-					left45(SD_SPEED); // move(CMD_STOP, SD_SPEED); //
-=======
 					left45(SD_SPEED); 
->>>>>>> 507f33bb8fceac9e25c2eea916c42d86b846a702
 					state++;
 					break;
 				case 3:
@@ -189,11 +163,7 @@ void app_self_driving(void *argument) {
 					osDelay(DELAY_STRAIGHT + 150);
 					stop_moving();
 					osDelay(DELAY_STOP);
-<<<<<<< HEAD
-					left45(SD_SPEED - 50); // move(CMD_STOP, SD_SPEED); //
-=======
-					left45(SD_SPEED); 
->>>>>>> 507f33bb8fceac9e25c2eea916c42d86b846a702
+					left45(SD_SPEED - 50); 
 					state++;
 					break;
 				case 7:
@@ -219,10 +189,6 @@ void app_self_driving(void *argument) {
 					rx_data = 0x00; //Force rx_data to change back to 0
 					buzzerStatus = 1;
 			}
-			//for debugging purpose
-			int state_case = state;
-			float dist = distance;
-			int i = 0;
 		}
 	}
 }
@@ -352,7 +318,6 @@ void app_control_buzzer(void *argument) {
 	for (;;) {
 		osMessageQueueGet(buzzerMsg, &receivedData, NULL, osWaitForever);
 		if (receivedData == 0x00) {
-			//playSong();
 			playCoffin();
 		}
 	}

@@ -43,8 +43,8 @@ void InitGPIOMotors(){
 
 void forwards(uint32_t speed) {
 	//change the duty cycle according to the speed desired
-	FORW_LEFT_WHEELS = speed; //TPM1->C0V
-	FORW_RIGHT_WHEELS = speed; //TPM2->C0V
+	FORW_LEFT_WHEELS = speed; 
+	FORW_RIGHT_WHEELS = speed; 
 	REV_LEFT_WHEELS = 0;
 	REV_RIGHT_WHEELS = 0;
 }
