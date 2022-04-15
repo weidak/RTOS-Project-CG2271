@@ -37,11 +37,11 @@ volatile int state = 1;
 volatile uint32_t buzzerStatus = 0x00;
 volatile uint32_t rx_data;
 
-osMessageQueueId_t motorMsg, buzzerMsg, frontLedMsg, rearLedMsg, completedBuzzerMsg;
+osMessageQueueId_t motorMsg, buzzerMsg, frontLedMsg, rearLedMsg;
 
 osSemaphoreId_t buzzerSem;
 
-osThreadId_t self_driving_Id;
+osThreadId_t selfDrivingId;
 
 /*---------------------
 FOR DEBUGGING PURPOSES
@@ -87,7 +87,7 @@ void UART2_IRQHandler() {
 	
 	if (UART2->S1 & UART_S1_RDRF_MASK) {
 		rx_data = UART2->D;
-		if (rx_data == CMD_SELF_DRIVING) osThreadFlagsSet(self_driving_Id, 0x0001);
+		if (rx_data == CMD_SELF_DRIVING) osThreadFlagsSet(selfDrivingId, 0x0001);
 	}
 	
 	if (UART2->S1 & (UART_S1_OR_MASK | UART_S1_NF_MASK | UART_S1_FE_MASK | UART_S1_PF_MASK)) {
@@ -107,12 +107,10 @@ void InitSelfDriving() {
 		TPM2->SC |= TPM_SC_CMOD(1);
 }
 
-void app_self_driving(void *argument) {
-	uint32_t receivedData;
+void tSelfDriving(void *argument) {
 	for (;;) {
 		osThreadFlagsWait(0x0001, osFlagsWaitAny, osWaitForever);
 		osSemaphoreRelease(buzzerSem);
-		uint32_t rx = rx_data;
 
 		InitSelfDriving();
 		
@@ -163,7 +161,6 @@ void app_self_driving(void *argument) {
 			
 			int state_case = state;
 			float dist = distance;
-			int i = 0;
 		}
 	}
 }
@@ -188,7 +185,7 @@ uint32_t checkMove(uint32_t cmd) {
 	}
 }
 
-void app_control_rear_led(void* argument) {
+void tRearLed(void* argument) {
 	uint32_t receivedData;
 	for (;;) {
 		osMessageQueueGet(frontLedMsg, &receivedData, NULL, osWaitForever);
@@ -200,7 +197,7 @@ void app_control_rear_led(void* argument) {
 	}
 }
 
-void app_control_front_led(void *argument) {
+void tFrontLed(void *argument) {
 	uint32_t receivedData;
 	for (;;) {
 		osMessageQueueGet(frontLedMsg, &receivedData, NULL, osWaitForever);
@@ -216,7 +213,7 @@ void app_control_front_led(void *argument) {
 	Motor Control Thread
 ------------------------------------ */
 
-void app_control_motor(void *argument) {
+void tMotor(void *argument) {
 	uint32_t currCmd;
 	for (;;) {
 		currCmd = rx_data;
@@ -240,7 +237,7 @@ void app_control_motor(void *argument) {
 			case CMD_RIGHT_STATIONARY:
 				right_stationary(FULL_SPEED);
 				break;
-			case 0x07: //self driving mode
+			case CMD_SELF_DRIVING: //self driving mode
 				//do nothing, should not stop moving
 				break;
 			default:
@@ -288,24 +285,27 @@ void playCoffin() {
 		osSemaphoreRelease(buzzerSem);
 }
 
-void app_control_buzzer(void *argument) {
+void tBuzzer(void *argument) {
 	uint32_t receivedData;
 	for (;;) {
 		osMessageQueueGet(buzzerMsg, &receivedData, NULL, osWaitForever);
 		if (receivedData == 0x00) {
-			//playSong();
 			playCoffin();
 		}
 	}
 }
 
 void checkBuzzer(uint32_t cmd) {
-	if (cmd == 0x09) {
+	if (cmd == CMD_BUZZER) {
 		buzzerStatus = 0x01;
 	}
 }
 
-void control_threads(void *argument) {
+/* ------------------------------------
+			Brain Thread
+------------------------------------ */
+
+void tBrain(void *argument) {
 	uint32_t currCmd;
 	uint32_t ledStatus;
 	while (1) {
@@ -325,8 +325,6 @@ static void delay(volatile uint32_t nof) {
     nof--;
   }
 }
-
-
 
 int main() {
 	SystemCoreClockUpdate();
@@ -352,13 +350,13 @@ int main() {
 	buzzerSem = osSemaphoreNew(1, 0, NULL); // Initialize only when moving, thus max 1 initial 0
 	
 	//Self Driving thread
-	self_driving_Id = osThreadNew(app_self_driving, NULL, NULL); 
+	selfDrivingId = osThreadNew(tSelfDriving, NULL, NULL); 
 	
-	osThreadNew(control_threads, NULL, NULL); 
-	osThreadNew(app_control_front_led, NULL, NULL);
-	osThreadNew(app_control_rear_led, NULL, NULL);
-	osThreadNew(app_control_buzzer, NULL, NULL);
-	osThreadNew(app_control_motor, NULL, NULL);
+	osThreadNew(tBrain, NULL, NULL); 
+	osThreadNew(tFrontLed, NULL, NULL);
+	osThreadNew(tRearLed, NULL, NULL);
+	osThreadNew(tBuzzer, NULL, NULL);
+	osThreadNew(tMotor, NULL, NULL);
 
 	motorMsg = osMessageQueueNew(QUEUE_MSG_COUNT, sizeof(rx_data) , NULL);
 	buzzerMsg = osMessageQueueNew(QUEUE_MSG_COUNT, sizeof(rx_data), NULL);
