@@ -25,7 +25,7 @@ CH3 -> PORTD 3
 
 #define FULL_SPEED 7501
 #define MEDIUM_SPEED 5000
-#define HALF_SPEED 3500
+#define HALF_SPEED 4000
 #define SLOW_SPEED 3000
 
 #define MASK(x) (1UL << x)

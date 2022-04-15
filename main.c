@@ -107,28 +107,50 @@ void InitSelfDriving() {
 		TPM2->SC |= TPM_SC_CMOD(1);
 }
 
+<<<<<<< HEAD
 void tSelfDriving(void *argument) {
 	for (;;) {
 		osThreadFlagsWait(0x0001, osFlagsWaitAny, osWaitForever);
 		osSemaphoreRelease(buzzerSem);
 
-		InitSelfDriving();
-		
-		while (1) {
-			
-			distance = getDistance();
+=======
+int counter_ultra = 0;
 
+void app_self_driving(void *argument) {
+	uint32_t receivedData;
+	for (;;) {
+		osThreadFlagsWait(0x0001, osFlagsWaitAny, osWaitForever);
+		osSemaphoreRelease(buzzerSem);
+		uint32_t rx = rx_data;
+		int fast_stop = 0;
+>>>>>>> 57c2f592e42384e20b3597f04f68f9761672c6be
+		InitSelfDriving();
+		while (1) {			
+			distance = getDistance();
 			switch (state) {
 				case 1:
-				case 7:
 					offRed();
-					forwards(SD_SPEED);
+					if (counter_ultra == 0) {
+						forwards(FIRST_FORWARD_SPEED);
+					}
+					else{
+						forwards(3000);
+					}
 					if (distance < DISTANCE_THRESHOLD) {
-						state++;
-						onRed();
+						if (counter_ultra == 1) {
+							state++;
+							onRed();
+							counter_ultra = 0;
+						}
+						
+						counter_ultra++;
 					}
 					break;
 				case 2:
+					stop_moving();
+					osDelay(DELAY_STOP);
+					reverse(SD_SPEED);
+					osDelay(DELAY_REV);
 					stop_moving();
 					osDelay(DELAY_STOP);
 					left45(SD_SPEED); 
@@ -146,13 +168,30 @@ void tSelfDriving(void *argument) {
 					break;
 				case 6:
 					forwards(SD_SPEED);
-					osDelay(DELAY_STRAIGHT);
+					osDelay(DELAY_STRAIGHT + 150);
 					stop_moving();
 					osDelay(DELAY_STOP);
-					left45(SD_SPEED); 
+					left45(SD_SPEED - 50); 
 					state++;
 					break;
+				case 7:
+					offRed();
+					forwards(RETURN_FORWARD_SPEED);
+					if (distance < DISTANCE_THRESHOLD - 10) {
+						if (counter_ultra == 1) {
+							state++;
+							onRed();
+							counter_ultra = 0;
+						}
+						counter_ultra++;
+					}
+					break;
 				default:
+					if (fast_stop == 0) {
+						reverse(SD_SPEED);
+						osDelay(50);
+						fast_stop = 1;
+					}
 					stop_moving();
 					osDelay(DELAY_STOP);
 					rx_data = 0x00; //Force rx_data to change back to 0
@@ -226,16 +265,16 @@ void tMotor(void *argument) {
 				reverse(FULL_SPEED); 
 				break;
 			case CMD_RIGHT:
-				right(MEDIUM_SPEED);
+				right(HALF_SPEED);
 				break;
 			case CMD_LEFT:
-				left(MEDIUM_SPEED);
+				left(HALF_SPEED);
 				break;
 			case CMD_LEFT_STATIONARY:
-				left_stationary(FULL_SPEED);
+				left_stationary(HALF_SPEED);
 				break;
 			case CMD_RIGHT_STATIONARY:
-				right_stationary(FULL_SPEED);
+				right_stationary(HALF_SPEED);
 				break;
 			case CMD_SELF_DRIVING: //self driving mode
 				//do nothing, should not stop moving

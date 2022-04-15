@@ -29,29 +29,7 @@ void InitPWMBuzzer() {
 	TPM1_C0SC &= ~((TPM_CnSC_ELSB_MASK) | (TPM_CnSC_ELSA_MASK) | (TPM_CnSC_MSB_MASK) | (TPM_CnSC_MSA_MASK));
 	TPM1_C0SC |= (TPM_CnSC_ELSB(1) | TPM_CnSC_MSB(1));
 }	
-/*
-void InitPWMBuzzer(){
-	//Enable clock gating for PortA
-	SIM_SCGC5 |= SIM_SCGC5_PORTA_MASK;
-	
-	//Enable clock gating for timer0
-	SIM->SCGC6 |= SIM_SCGC6_TPM0_MASK;
-	
-	//Select clock for TPM module
-	SIM->SOPT2 &= ~SIM_SOPT2_TPMSRC_MASK;
-	SIM->SOPT2 |= SIM_SOPT2_TPMSRC(1);
-	
-	//modulo value
-	TPM0->MOD = 7500;
-	
-	TPM0->SC &= ~((TPM_SC_CMOD_MASK | TPM_SC_PS_MASK));
-	TPM0->SC |= (TPM_SC_CMOD(1) | TPM_SC_PS(7)); //Set CMOD to 01 to increment according to main clock
-	TPM0->SC &= ~(TPM_SC_CPWMS_MASK); //upcounting
-	
-	TPM0_C2SC &= ~((TPM_CnSC_ELSB_MASK) | (TPM_CnSC_ELSA_MASK) | (TPM_CnSC_MSB_MASK) | (TPM_CnSC_MSA_MASK));
-	TPM0_C2SC |= (TPM_CnSC_ELSB(1) | TPM_CnSC_MSB(1));
-}
-*/
+
 void InitGPIOBuzzer() {
 	//Configure mode 3 for pwm pin
 	PORTB->PCR[BUZZER_PIN] &= ~PORT_PCR_MUX_MASK;
@@ -72,7 +50,6 @@ void delay_mult100(volatile uint32_t nof) {
 }
 
 int frequency(char note) {
-  //int numNotes = 19; 
   char names[] = { 'c', 'd', 'e', 'f', 'g', 't', 'a', 'b', 'h', 'C' , 'D' , 'S' , 'E', 'F' , 'J', 'G' , 'A' , 'V' , 'U'};
   int frequencies[] = {262, 294, 330, 349, 392, 415 , 440, 466 , 494, 523, 587, 622 , 659, 698, 740, 784, 880 , 1047 , 622};
  
@@ -89,7 +66,7 @@ void playSong() {
 			TPM1->MOD = FREQ2MOD(frequency(notes[i])); //need a function that converts freq to mod value
 			TPM1_C0V = (FREQ2MOD(frequency(notes[i])))/5; //20% Duty Cycle
 			osSemaphoreRelease(buzzerSem);
-			osDelay(beats[i] * tempo); //delay_mult100(beats[i] * tempo);
+			osDelay(beats[i] * tempo); 
 		}
 	}
 }
