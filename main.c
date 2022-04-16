@@ -107,23 +107,16 @@ void InitSelfDriving() {
 		TPM2->SC |= TPM_SC_CMOD(1);
 }
 
-<<<<<<< HEAD
+int counter_ultra = 0;
+
 void tSelfDriving(void *argument) {
 	for (;;) {
 		osThreadFlagsWait(0x0001, osFlagsWaitAny, osWaitForever);
 		osSemaphoreRelease(buzzerSem);
-
-=======
-int counter_ultra = 0;
-
-void app_self_driving(void *argument) {
-	uint32_t receivedData;
-	for (;;) {
 		osThreadFlagsWait(0x0001, osFlagsWaitAny, osWaitForever);
 		osSemaphoreRelease(buzzerSem);
 		uint32_t rx = rx_data;
 		int fast_stop = 0;
->>>>>>> 57c2f592e42384e20b3597f04f68f9761672c6be
 		InitSelfDriving();
 		while (1) {			
 			distance = getDistance();
