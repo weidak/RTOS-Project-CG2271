@@ -1,4 +1,11 @@
-# CG2271
+# CG2271 Real Time Operating Systems
+
+This project was to design a robotic vehicle that is piloted through an Android application. It gives us a hands-on experience to the things taught such as scheduling algorithms, multi-threading, resource locking and more.
+
+Submission Video:
+[![image](https://github.com/weidak/CG2271/assets/70256674/01cb0fab-0e4a-4dee-9f66-f447b7c87313)](https://youtu.be/53UcGHaGFQo)
+
+This project was done by Tan Xing Jie, Tan Rui Yang, Braden Teo and Tay Weida.
 
 ## Project Specifications:
 
@@ -44,4 +51,4 @@
     - [x] Configure ultrasonic sensor to detect distance
     - [x] Configure: 45 degree left turn, forwards, 90 degree right turn (x3), forwards, 45 degree left turn to complete a rhombus shape
 3. The LED’s and Audio are required to fulfil the requirements specified in Part C and D.
-    - [ ] Connect up the codes between the 2 states
+    - [x] Connect up the codes between the 2 states
