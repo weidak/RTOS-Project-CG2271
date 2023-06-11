@@ -3,7 +3,8 @@
 This project was to design a robotic vehicle that is piloted through an Android application. It gives us a hands-on experience to the things taught such as scheduling algorithms, multi-threading, resource locking and more.
 
 Submission Video:
-[![image](https://github.com/weidak/CG2271/assets/70256674/01cb0fab-0e4a-4dee-9f66-f447b7c87313)](https://youtu.be/53UcGHaGFQo)
+
+[<img src="https://github.com/weidak/RTOS-Project-CG2271/assets/70256674/77b7b0be-ddf8-4039-a6bd-43dc76a57e87" width="70%">](https://youtu.be/53UcGHaGFQo)
 
 This project was done by Tan Xing Jie, Tan Rui Yang, Braden Teo and Tay Weida.
 
