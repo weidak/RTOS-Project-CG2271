@@ -4,7 +4,7 @@ This project was to design a robotic vehicle that is piloted through an Android 
 
 Submission Video:
 
-[<img src="https://github.com/weidak/RTOS-Project-CG2271/assets/70256674/77b7b0be-ddf8-4039-a6bd-43dc76a57e87" width="70%">](https://youtu.be/53UcGHaGFQo)
+[![CG2271 Video](https://img.youtube.com/vi/53UcGHaGFQo/2.jpg)](https://www.youtube.com/watch?v=sjW3fCfo3BI)
 
 This project was done by Tan Xing Jie, Tan Rui Yang, Braden Teo and Tay Weida.
 
