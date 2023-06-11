@@ -2,7 +2,10 @@
 
 This project was to design a robotic vehicle that is piloted through an Android application. It gives us a hands-on experience to the things taught such as scheduling algorithms, multi-threading, resource locking and more.
 
-Submission Video:
+<img src="https://github.com/weidak/RTOS-Project-CG2271/assets/70256674/0ea052d6-4455-4938-ab5b-23f110727f21" width=90%>
+<p></p>
+
+<strong>Submission Video:</strong> 
 
 [![CG2271 Video](https://img.youtube.com/vi/53UcGHaGFQo/2.jpg)](https://www.youtube.com/watch?v=sjW3fCfo3BI)
 
